@@ -42,3 +42,11 @@ export const authApi = {
   login: (data: any) => api.post('/user/login', data),
   register: (data: any) => api.post('/user/register', data),
 }
+
+export const matchApi = {
+  updateSettings: (data: { enabled: boolean; intent?: string }) =>
+    api.post('/match/settings', data),
+  getRecommendations: () => api.get('/match/recommendations'),
+  handleAction: (matchId: number, action: 1 | 2) =>
+    api.post(`/match/${matchId}/action`, { action }),
+}

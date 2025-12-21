@@ -6,6 +6,8 @@ interface User {
   userId: string
   userName: string
   email?: string
+  isMatchEnabled?: boolean
+  matchIntent?: string
 }
 
 interface AuthState {

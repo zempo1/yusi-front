@@ -18,6 +18,7 @@ export const Layout = ({ children }: LayoutProps) => {
     { label: '首页', href: '/' },
     { label: '情景室', href: '/room' },
     { label: 'AI知己', href: '/diary' },
+    { label: '灵魂匹配', href: '/match' },
   ]
 
   const toggleTheme = () => {
