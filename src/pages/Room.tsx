@@ -39,11 +39,14 @@ export const Room = () => {
 
   useEffect(() => {
     fetchRoom()
-    timerRef.current = setInterval(fetchRoom, 2000)
+    // Only poll if room is not completed or cancelled
+    if (room?.status !== 'COMPLETED' && room?.status !== 'CANCELLED') {
+        timerRef.current = setInterval(fetchRoom, 2000)
+    }
     return () => {
         if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [code])
+  }, [code, room?.status])
 
   useEffect(() => {
     if (!code) return
