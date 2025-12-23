@@ -92,6 +92,12 @@
   }
 }
 
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 @layer components {
   .glass {
     @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-sm dark:bg-black/70 dark:border-white/10;

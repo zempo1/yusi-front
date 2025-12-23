@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '../utils'
-import { Moon, Sun, Github, LogOut, User as UserIcon } from 'lucide-react'
+import { Moon, Sun, Github, LogOut, User as UserIcon, Home, LayoutGrid, History, Book, Heart } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { Button } from './ui/Button'
 import { ChatWidget } from './ChatWidget'
@@ -15,11 +15,11 @@ export const Layout = ({ children }: LayoutProps) => {
   const { user, logout } = useAuthStore()
   
   const navItems = [
-    { label: '首页', href: '/' },
-    { label: '情景室', href: '/room' },
-    { label: '记录', href: '/room/history' },
-    { label: 'AI知己', href: '/diary' },
-    { label: '灵魂匹配', href: '/match' },
+    { label: '首页', href: '/', icon: Home },
+    { label: '情景室', href: '/room', icon: LayoutGrid },
+    { label: '记录', href: '/room/history', icon: History },
+    { label: 'AI知己', href: '/diary', icon: Book },
+    { label: '匹配', href: '/match', icon: Heart },
   ]
 
   const toggleTheme = () => {
@@ -27,15 +27,15 @@ export const Layout = ({ children }: LayoutProps) => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background font-sans antialiased">
+    <div className="flex min-h-screen flex-col bg-background font-sans antialiased pb-16 md:pb-0">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container-page flex h-14 max-w-screen-2xl items-center">
+        <div className="container-page flex h-14 max-w-screen-2xl items-center justify-between">
           <div className="mr-4 flex">
             <Link to="/" className="mr-6 flex items-center space-x-2">
               <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold">Y</span>
-              <span className="hidden font-bold sm:inline-block">Yusi · 灵魂叙事</span>
+              <span className="font-bold inline-block">Yusi</span>
             </Link>
-            <nav className="flex items-center gap-6 text-sm font-medium">
+            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -87,7 +87,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 to="https://github.com/Aseubel/yusi"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background px-0 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-md border border-input bg-background px-0 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
               >
                 <Github className="h-4 w-4" />
                 <span className="sr-only">GitHub</span>
@@ -104,10 +104,30 @@ export const Layout = ({ children }: LayoutProps) => {
           </div>
         </div>
       </header>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur pb-safe">
+        <nav className="flex justify-around items-center h-16">
+          {navItems.map((item) => (
+            <Link
+              key={item.href}
+              to={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center flex-1 h-full space-y-1",
+                pathname === item.href ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <item.icon className={cn("h-5 w-5", pathname === item.href && "fill-current")} />
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+      </div>
+
       <main className="flex-1 container-page py-6 md:py-10">
         {children}
       </main>
-      <footer className="py-6 md:px-8 md:py-0">
+      <footer className="py-6 md:px-8 md:py-0 hidden md:block">
         <div className="container-page flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
             Built by <span className="font-medium underline underline-offset-4">Yusi Team</span>. The source code is available on <span className="font-medium underline underline-offset-4">GitHub</span>.

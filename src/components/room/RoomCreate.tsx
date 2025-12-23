@@ -25,25 +25,27 @@ export const RoomCreate = () => {
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>创建情景室</CardTitle>
         <CardDescription>创建一个新的房间，邀请朋友一起探索。</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">最大人数</label>
             <span className="text-sm text-muted-foreground">{maxMembers} 人</span>
           </div>
-          <input
-            type="range"
-            min={2}
-            max={8}
-            value={maxMembers}
-            onChange={(e) => setMaxMembers(parseInt(e.target.value, 10))}
-            className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-          />
+          <div className="h-10 flex items-center">
+            <input
+              type="range"
+              min={2}
+              max={8}
+              value={maxMembers}
+              onChange={(e) => setMaxMembers(parseInt(e.target.value, 10))}
+              className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+            />
+          </div>
         </div>
       </CardContent>
       <CardFooter>

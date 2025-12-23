@@ -29,14 +29,16 @@ export const RoomJoin = () => {
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         <CardTitle>加入情景室</CardTitle>
         <CardDescription>输入邀请码，加入朋友的房间。</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1">
         <div className="space-y-2">
-          <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">邀请码（6位）</label>
+          <div className="flex items-center justify-between h-[20px]">
+            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">邀请码（6位）</label>
+          </div>
           <Input
             value={code}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCode(e.target.value.toUpperCase())}

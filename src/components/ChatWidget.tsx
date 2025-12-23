@@ -157,7 +157,7 @@ export const ChatWidget = () => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-20 right-4 z-50 w-[380px] h-[500px] shadow-2xl rounded-2xl overflow-hidden flex flex-col bg-background/95 backdrop-blur border border-border/50"
+            className="fixed bottom-32 right-4 z-50 w-[380px] h-[500px] shadow-2xl rounded-2xl overflow-hidden flex flex-col bg-background/95 backdrop-blur border border-border/50"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/30">
@@ -247,10 +247,12 @@ export const ChatWidget = () => {
       </AnimatePresence>
 
       <motion.button
+        drag
+        dragMomentum={false}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors"
+        className="fixed bottom-24 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors touch-none"
       >
         {isOpen ? (
           <X className="h-6 w-6" />

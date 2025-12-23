@@ -31,17 +31,18 @@ export const RoomSubmit = ({ code, userId }: { code: string; userId: string }) =
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>写下你的叙事</CardTitle>
+      <CardHeader className="p-4 md:p-6 pb-2 md:pb-6">
+        <CardTitle className="text-base md:text-lg">写下你的叙事</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4 md:p-6 pt-2 md:pt-0">
         <Textarea
           value={narrative}
           onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNarrative(e.target.value)}
           rows={8}
           placeholder="描述你在该情景下会采取的行动与想法..."
+          className="min-h-[150px]"
         />
-        <div className="flex justify-between items-center text-sm text-muted-foreground">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center text-sm text-muted-foreground gap-2">
           <label className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors">
             <input 
               type="checkbox" 
@@ -51,13 +52,13 @@ export const RoomSubmit = ({ code, userId }: { code: string; userId: string }) =
             />
             允许公开我的回答
           </label>
-          <span>
+          <span className="text-right">
             已输入 {countChars(narrative)} / 1000 字符
           </span>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button isLoading={loading} onClick={handleSubmit}>
+      <CardFooter className="p-4 md:p-6 pt-0 md:pt-0">
+        <Button isLoading={loading} onClick={handleSubmit} className="w-full md:w-auto">
           提交叙事
         </Button>
       </CardFooter>

@@ -58,6 +58,7 @@ export interface SituationReport {
   scenarioId: string;
   personal: PersonalSketch[];
   pairs: PairCompatibility[];
+  publicSubmissions?: { userId: string; content: string }[];
 }
 
 export const createRoom = async (req: CreateRoomRequest): Promise<Room> => {
