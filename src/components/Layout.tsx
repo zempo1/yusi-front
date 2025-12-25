@@ -130,7 +130,7 @@ export const Layout = ({ children }: LayoutProps) => {
       <footer className="py-6 md:px-8 md:py-0 hidden md:block">
         <div className="container-page flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Built by <span className="font-medium underline underline-offset-4">Yusi Team</span>. The source code is available on <span className="font-medium underline underline-offset-4">GitHub</span>.
+            Built by <span className="font-medium underline underline-offset-4"><a href="https://github.com/Aseubel" target="_blank" rel="noreferrer">Aseubel</a></span>. The source code is available on <span className="font-medium underline underline-offset-4">GitHub</span>.
           </p>
         </div>
       </footer>
