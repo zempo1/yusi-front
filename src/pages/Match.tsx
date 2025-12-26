@@ -18,6 +18,8 @@ interface SoulMatch {
   createTime: string
 }
 
+import { SoulChatWindow } from '../components/SoulChatWindow'
+
 export const Match = () => {
   const { user, login } = useAuthStore() // login used to update user state
   const [isEnabled, setIsEnabled] = useState(false)
@@ -25,6 +27,15 @@ export const Match = () => {
   const [loading, setLoading] = useState(false)
   const [matches, setMatches] = useState<SoulMatch[]>([])
   const [refreshing, setRefreshing] = useState(false)
+  
+  // Chat state
+  const [isChatOpen, setIsChatOpen] = useState(false)
+  const [currentMatchId, setCurrentMatchId] = useState<number | null>(null)
+  
+  const handleOpenChat = (matchId: number) => {
+    setCurrentMatchId(matchId)
+    setIsChatOpen(true)
+  }
 
   useEffect(() => {
     if (user) {
@@ -192,10 +203,14 @@ export const Match = () => {
                       <div className="p-4 bg-background/50 border-t flex items-center justify-between">
                          <div className="text-sm text-muted-foreground">
                             {match.isMatched ? (
-                                <span className="flex items-center text-green-600 font-medium">
-                                    <MessageCircle className="w-4 h-4 mr-1" />
-                                    你们已开启匿名聊天 (开发中...)
-                                </span>
+                                <Button 
+                                    variant="outline" 
+                                    className="text-green-600 border-green-200 hover:bg-green-50"
+                                    onClick={() => handleOpenChat(match.id)}
+                                >
+                                    <MessageCircle className="w-4 h-4 mr-2" />
+                                    开启匿名聊天
+                                </Button>
                             ) : myStatus === 1 ? (
                                 <span className="text-primary font-medium">
                                     已发送感兴趣信号，等待对方回应...
@@ -235,6 +250,12 @@ export const Match = () => {
           </div>
         )}
       </div>
+
+      <SoulChatWindow 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        matchId={currentMatchId} 
+      />
     </Layout>
   )
 }

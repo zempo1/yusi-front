@@ -50,3 +50,14 @@ export const matchApi = {
   handleAction: (matchId: number, action: 1 | 2) =>
     api.post(`/match/${matchId}/action`, { action }),
 }
+
+export const soulChatApi = {
+  sendMessage: (data: { matchId: number; content: string }) =>
+    api.post('/soul-chat/send', data),
+  getHistory: (matchId: number) =>
+    api.get(`/soul-chat/history?matchId=${matchId}`),
+  markAsRead: (matchId: number) =>
+    api.post('/soul-chat/read', { matchId }),
+  getUnreadCount: () =>
+    api.get('/soul-chat/unread/count'),
+}
