@@ -19,6 +19,20 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+let isRefreshing = false
+let failedQueue: any[] = []
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error)
+    } else {
+      prom.resolve(token)
+    }
+  })
+  failedQueue = []
+}
+
 api.interceptors.response.use(
   (res) => {
     const newToken = res.headers['x-new-access-token']
@@ -27,12 +41,56 @@ api.interceptors.response.use(
     }
     return res
   },
-  (err) => {
-    const msg = err.response?.data?.info || err.message
-    if (err.response?.status === 401) {
-       useAuthStore.getState().logout()
-       // window.location.href = '/login' // Optional: redirect
+  async (err) => {
+    const originalRequest = err.config
+
+    if (err.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise(function(resolve, reject) {
+          failedQueue.push({ resolve, reject })
+        }).then((token) => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token
+          return api(originalRequest)
+        }).catch((err) => {
+          return Promise.reject(err)
+        })
+      }
+
+      originalRequest._retry = true
+      isRefreshing = true
+
+      const { refreshToken, setToken, logout } = useAuthStore.getState()
+
+      try {
+        if (!refreshToken) {
+          throw new Error('No refresh token')
+        }
+
+        const { data } = await axios.post(API_BASE + '/user/refresh', {}, {
+          headers: {
+            'X-Refresh-Token': refreshToken
+          }
+        })
+
+        if (data.code === 200) {
+          const newToken = data.data.accessToken
+          setToken(newToken)
+          originalRequest.headers['Authorization'] = 'Bearer ' + newToken
+          processQueue(null, newToken)
+          return api(originalRequest)
+        } else {
+          throw new Error(data.msg || 'Refresh failed')
+        }
+      } catch (refreshErr) {
+        processQueue(refreshErr, null)
+        logout()
+        return Promise.reject(refreshErr)
+      } finally {
+        isRefreshing = false
+      }
     }
+
+    const msg = err.response?.data?.info || err.message
     toast.error(msg)
     return Promise.reject(err)
   }
