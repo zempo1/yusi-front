@@ -1,121 +1,132 @@
-import axios from 'axios'
-import { toast } from 'sonner'
-import { API_BASE } from '../utils'
-import { useAuthStore } from '../store/authStore'
+import axios from "axios";
+import { toast } from "sonner";
+import { API_BASE } from "../utils";
+import { useAuthStore } from "../store/authStore";
 
 export const api = axios.create({
   baseURL: API_BASE,
   timeout: 10000,
-})
+});
 
 api.interceptors.request.use((config) => {
-  const { token, refreshToken } = useAuthStore.getState()
+  const { token, refreshToken } = useAuthStore.getState();
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    config.headers.Authorization = `Bearer ${token}`;
   }
   if (refreshToken) {
-    config.headers['X-Refresh-Token'] = refreshToken
+    config.headers["X-Refresh-Token"] = refreshToken;
   }
-  return config
-})
+  return config;
+});
 
-let isRefreshing = false
-let failedQueue: any[] = []
+interface FailedRequest {
+  resolve: (token: string) => void;
+  reject: (error: unknown) => void;
+}
 
-const processQueue = (error: any, token: string | null = null) => {
+let isRefreshing = false;
+let failedQueue: FailedRequest[] = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {
-      prom.reject(error)
+      prom.reject(error);
     } else {
-      prom.resolve(token)
+      if (token) {
+        prom.resolve(token);
+      }
     }
-  })
-  failedQueue = []
-}
+  });
+  failedQueue = [];
+};
 
 api.interceptors.response.use(
   (res) => {
-    const newToken = res.headers['x-new-access-token']
+    const newToken = res.headers["x-new-access-token"];
     if (newToken) {
-      useAuthStore.getState().setToken(newToken)
+      useAuthStore.getState().setToken(newToken);
     }
-    return res
+    return res;
   },
   async (err) => {
-    const originalRequest = err.config
+    const originalRequest = err.config;
 
     if (err.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        return new Promise(function(resolve, reject) {
-          failedQueue.push({ resolve, reject })
-        }).then((token) => {
-          originalRequest.headers['Authorization'] = 'Bearer ' + token
-          return api(originalRequest)
-        }).catch((err) => {
-          return Promise.reject(err)
+        return new Promise(function (resolve, reject) {
+          failedQueue.push({ resolve, reject });
         })
+          .then((token) => {
+            originalRequest.headers["Authorization"] = "Bearer " + token;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
 
-      originalRequest._retry = true
-      isRefreshing = true
+      originalRequest._retry = true;
+      isRefreshing = true;
 
-      const { refreshToken, setToken, logout } = useAuthStore.getState()
+      const { refreshToken, setToken, logout } = useAuthStore.getState();
 
       try {
         if (!refreshToken) {
-          throw new Error('No refresh token')
+          throw new Error("No refresh token");
         }
 
-        const { data } = await axios.post(API_BASE + '/user/refresh', {}, {
-          headers: {
-            'X-Refresh-Token': refreshToken
+        const { data } = await axios.post(
+          API_BASE + "/user/refresh",
+          {},
+          {
+            headers: {
+              "X-Refresh-Token": refreshToken,
+            },
           }
-        })
+        );
 
         if (data.code === 200) {
-          const newToken = data.data.accessToken
-          setToken(newToken)
-          originalRequest.headers['Authorization'] = 'Bearer ' + newToken
-          processQueue(null, newToken)
-          return api(originalRequest)
+          const newToken = data.data.accessToken;
+          setToken(newToken);
+          originalRequest.headers["Authorization"] = "Bearer " + newToken;
+          processQueue(null, newToken);
+          return api(originalRequest);
         } else {
-          throw new Error(data.msg || 'Refresh failed')
+          throw new Error(data.msg || "Refresh failed");
         }
       } catch (refreshErr) {
-        processQueue(refreshErr, null)
-        logout()
-        return Promise.reject(refreshErr)
+        processQueue(refreshErr, null);
+        logout();
+        return Promise.reject(refreshErr);
       } finally {
-        isRefreshing = false
+        isRefreshing = false;
       }
     }
 
-    const msg = err.response?.data?.info || err.message
-    toast.error(msg)
-    return Promise.reject(err)
+    const msg = err.response?.data?.info || err.message;
+    toast.error(msg);
+    return Promise.reject(err);
   }
-)
+);
 
 export const authApi = {
-  login: (data: any) => api.post('/user/login', data),
-  register: (data: any) => api.post('/user/register', data),
-}
+  login: (data: any) => api.post("/user/login", data),
+  register: (data: any) => api.post("/user/register", data),
+};
 
 export const matchApi = {
   updateSettings: (data: { enabled: boolean; intent?: string }) =>
-    api.post('/match/settings', data),
-  getRecommendations: () => api.get('/match/recommendations'),
+    api.post("/match/settings", data),
+  getRecommendations: () => api.get("/match/recommendations"),
   handleAction: (matchId: number, action: 1 | 2) =>
     api.post(`/match/${matchId}/action`, { action }),
-}
+};
 
 export const soulChatApi = {
   sendMessage: (data: { matchId: number; content: string }) =>
-    api.post('/soul-chat/send', data),
+    api.post("/soul-chat/send", data),
   getHistory: (matchId: number) =>
     api.get(`/soul-chat/history?matchId=${matchId}`),
-  markAsRead: (matchId: number) =>
-    api.post('/soul-chat/read', { matchId }),
-  getUnreadCount: () =>
-    api.get('/soul-chat/unread/count'),
-}
+  markAsRead: (matchId: number) => api.post("/soul-chat/read", { matchId }),
+  getUnreadCount: () => api.get("/soul-chat/unread/count"),
+};
