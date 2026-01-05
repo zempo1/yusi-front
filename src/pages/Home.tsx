@@ -1,5 +1,5 @@
 import { Layout } from '../components/Layout'
-import { RoomCreate, RoomJoin } from '../components/room'
+import { RoomCreate, RoomJoin, ScenarioSubmit } from '../components/room'
 import { motion } from 'framer-motion'
 
 export const Home = () => {
@@ -20,7 +20,7 @@ export const Home = () => {
           </p>
         </section>
         
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -29,11 +29,18 @@ export const Home = () => {
             <RoomCreate />
           </motion.div>
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
             <RoomJoin />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <ScenarioSubmit />
           </motion.div>
         </div>
       </motion.div>

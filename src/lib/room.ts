@@ -61,6 +61,21 @@ export interface SituationReport {
   publicSubmissions?: { userId: string; content: string }[];
 }
 
+export interface SubmitScenarioRequest {
+  title: string;
+  description: string;
+}
+
+export const getScenarios = async (): Promise<Scenario[]> => {
+  const { data } = await api.get("/room/scenarios");
+  return data.data;
+};
+
+export const submitScenario = async (req: SubmitScenarioRequest): Promise<Scenario> => {
+  const { data } = await api.post("/room/scenarios/submit", req);
+  return data.data;
+};
+
 export const createRoom = async (req: CreateRoomRequest): Promise<Room> => {
   const { data } = await api.post("/room/create", req);
   return data.data;
