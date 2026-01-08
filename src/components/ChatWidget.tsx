@@ -27,8 +27,8 @@ export const ChatWidget = () => {
 
   useEffect(() => {
     if (isOpen && initialMessage) {
-        setInput(initialMessage)
-        setInitialMessage('')
+      setInput(initialMessage)
+      setInitialMessage('')
     }
   }, [isOpen, initialMessage])
 
@@ -72,7 +72,23 @@ export const ChatWidget = () => {
       )
 
       if (!response.ok) {
-        throw new Error('Failed to connect to AI service')
+        // Try to parse error response
+        const contentType = response.headers.get('content-type')
+        if (contentType?.includes('application/json')) {
+          const errorData = await response.json()
+          const errorCode = errorData.code
+
+          // Handle specific error codes
+          if (errorCode === 42901) {
+            toast.error('您有一个AI请求正在处理中，请等待完成后再试')
+            // Remove the pending AI message
+            setMessages((prev) => prev.filter((msg) => msg.id !== aiMsgId))
+            return
+          }
+
+          throw new Error(errorData.info || 'AI服务连接失败')
+        }
+        throw new Error('AI服务连接失败')
       }
 
       const reader = response.body?.getReader()
@@ -86,23 +102,23 @@ export const ChatWidget = () => {
         if (done) {
           if (buffer.length > 0) {
             // Process any remaining buffer content
-             if (buffer.startsWith('data:')) {
-                const data = buffer.slice(5)
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === aiMsgId
-                      ? { ...msg, content: msg.content + data, pending: false }
-                      : msg
-                  )
+            if (buffer.startsWith('data:')) {
+              const data = buffer.slice(5)
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === aiMsgId
+                    ? { ...msg, content: msg.content + data, pending: false }
+                    : msg
                 )
-             }
+              )
+            }
           }
           break
         }
 
         const chunk = decoder.decode(value, { stream: true })
         buffer += chunk
-        
+
         const lines = buffer.split('\n')
         // Keep the last part in buffer as it might be incomplete
         buffer = lines.pop() || ''
@@ -122,14 +138,14 @@ export const ChatWidget = () => {
       }
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        toast.info('Response stopped')
+        toast.info('响应已停止')
       } else {
         console.error('Chat error:', error)
-        toast.error('Failed to get response')
+        toast.error(error.message || '获取响应失败')
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === aiMsgId
-              ? { ...msg, content: msg.content + '\n[Error: Connection failed]', pending: false }
+              ? { ...msg, content: msg.content + '\n[错误: 连接失败]', pending: false }
               : msg
           )
         )
@@ -221,25 +237,25 @@ export const ChatWidget = () => {
                   disabled={isStreaming}
                 />
                 {isStreaming ? (
-                    <Button
-                      size="icon"
-                      variant="danger"
-                      className="absolute right-1 h-8 w-8 rounded-full"
-                      onClick={handleStop}
-                    >
-                      <StopCircle className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button
-                      size="icon"
-                      variant="primary"
-                      className="absolute right-1 h-8 w-8 rounded-full"
-                      onClick={handleSend}
-                      disabled={!input.trim()}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <Button
+                    size="icon"
+                    variant="danger"
+                    className="absolute right-1 h-8 w-8 rounded-full"
+                    onClick={handleStop}
+                  >
+                    <StopCircle className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="icon"
+                    variant="primary"
+                    className="absolute right-1 h-8 w-8 rounded-full"
+                    onClick={handleSend}
+                    disabled={!input.trim()}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
           </motion.div>

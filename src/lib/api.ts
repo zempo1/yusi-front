@@ -8,13 +8,17 @@ export const ErrorCode = {
   SYSTEM_ERROR: 500,
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
-  
+
   TOKEN_EXPIRED: 40101,
   TOKEN_INVALID: 40102,
   TOKEN_MISSING: 40103,
-  
+  DEVICE_LIMIT_EXCEEDED: 40104,
+
   PARAM_ERROR: 400,
   RESOURCE_NOT_FOUND: 404,
+
+  // AI errors
+  AI_REQUEST_IN_PROGRESS: 42901,
 } as const;
 
 export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
