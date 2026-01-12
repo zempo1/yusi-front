@@ -7,7 +7,21 @@ import { Button, Textarea } from '../components/ui'
 import { toast } from 'sonner'
 import { cn } from '../utils'
 
-const EMOTIONS = ['All', 'Joy', 'Sadness', 'Anger', 'Fear', 'Surprise', 'Neutral']
+// 情感标签映射：后端值 -> 中文显示
+const EMOTION_MAP: Record<string, string> = {
+    'All': '全部',
+    'Joy': '喜悦',
+    'Sadness': '悲伤',
+    'Anxiety': '焦虑',
+    'Love': '温暖',
+    'Anger': '愤怒',
+    'Fear': '恐惧',
+    'Hope': '希望',
+    'Calm': '平静',
+    'Confusion': '困惑',
+    'Neutral': '随想',
+}
+const EMOTIONS = Object.keys(EMOTION_MAP)
 
 export const Plaza = () => {
     const [cards, setCards] = useState<SoulCardType[]>([])
@@ -15,7 +29,7 @@ export const Plaza = () => {
     const [loading, setLoading] = useState(false)
     const [hasMore, setHasMore] = useState(true)
     const [selectedEmotion, setSelectedEmotion] = useState('All')
-    
+
     // Post Modal State
     const [isPostOpen, setIsPostOpen] = useState(false)
     const [postContent, setPostContent] = useState('')
@@ -83,7 +97,7 @@ export const Plaza = () => {
             <div className="space-y-6 container mx-auto max-w-5xl relative min-h-screen pb-20">
                 <div className="text-center space-y-4 py-8">
                     <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 font-display">
-                        Soul Plaza
+                        灵魂广场
                     </h2>
                     <p className="text-muted-foreground text-lg max-w-xl mx-auto">
                         在这里，遇见共鸣的灵魂。匿名分享，温暖相拥。
@@ -98,12 +112,12 @@ export const Plaza = () => {
                             onClick={() => handleEmotionSelect(emo)}
                             className={cn(
                                 "px-4 py-1.5 rounded-full text-sm transition-all border",
-                                selectedEmotion === emo 
-                                    ? "bg-primary text-primary-foreground border-primary shadow-md" 
+                                selectedEmotion === emo
+                                    ? "bg-primary text-primary-foreground border-primary shadow-md"
                                     : "bg-background hover:bg-muted text-muted-foreground border-transparent hover:border-border"
                             )}
                         >
-                            {emo === 'All' ? '全部' : emo}
+                            {EMOTION_MAP[emo] || emo}
                         </button>
                     ))}
                 </div>
@@ -143,8 +157,8 @@ export const Plaza = () => {
 
                 {/* FAB */}
                 <div className="fixed bottom-8 right-8 z-50">
-                    <Button 
-                        size="icon" 
+                    <Button
+                        size="icon"
                         className="h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white"
                         onClick={() => setIsPostOpen(true)}
                     >
@@ -163,8 +177,8 @@ export const Plaza = () => {
                                 </Button>
                             </div>
                             <div className="space-y-2">
-                                <Textarea 
-                                    placeholder="写下此刻的想法，匿名投递到广场..." 
+                                <Textarea
+                                    placeholder="写下此刻的想法，匿名投递到广场..."
                                     className="min-h-[150px] resize-none text-base"
                                     value={postContent}
                                     onChange={e => setPostContent(e.target.value)}
@@ -175,8 +189,8 @@ export const Plaza = () => {
                             </div>
                             <div className="flex justify-end gap-2 pt-2">
                                 <Button variant="outline" onClick={() => setIsPostOpen(false)}>取消</Button>
-                                <Button 
-                                    onClick={handlePost} 
+                                <Button
+                                    onClick={handlePost}
                                     isLoading={posting}
                                     className="bg-gradient-to-r from-pink-500 to-purple-600 text-white"
                                 >

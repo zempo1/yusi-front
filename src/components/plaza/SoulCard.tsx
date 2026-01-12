@@ -9,6 +9,20 @@ interface SoulCardProps {
     card: SoulCardType
 }
 
+// 情感标签映射：后端英文值 -> 中文显示
+const EMOTION_LABELS: Record<string, string> = {
+    'Joy': '喜悦',
+    'Sadness': '悲伤',
+    'Anxiety': '焦虑',
+    'Love': '温暖',
+    'Anger': '愤怒',
+    'Fear': '恐惧',
+    'Hope': '希望',
+    'Calm': '平静',
+    'Confusion': '困惑',
+    'Neutral': '随想',
+}
+
 export const SoulCard = ({ card }: SoulCardProps) => {
     const [count, setCount] = useState(card.resonanceCount)
     const [resonated, setResonated] = useState(false)
@@ -51,33 +65,33 @@ export const SoulCard = ({ card }: SoulCardProps) => {
 
                     <div className="flex items-center justify-between pt-2">
                         <div className="text-xs text-muted-foreground italic flex items-center gap-1">
-                            {card.emotion && <span className="bg-primary/5 px-1.5 py-0.5 rounded text-primary/70">#{card.emotion}</span>}
+                            {card.emotion && <span className="bg-primary/5 px-1.5 py-0.5 rounded text-primary/70">#{EMOTION_LABELS[card.emotion] || card.emotion}</span>}
                         </div>
-                        
+
                         <div className="relative">
                             {!resonated && showOptions && (
                                 <div className="absolute bottom-full right-0 mb-2 flex gap-1 bg-background border shadow-lg rounded-full p-1 z-10 animate-in fade-in slide-in-from-bottom-2">
-                                    <Button 
+                                    <Button
                                         variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-red-100 hover:text-red-500"
-                                        onClick={() => handleResonate('EMPATHY')} disabled={loading} title="Empathy"
+                                        onClick={() => handleResonate('EMPATHY')} disabled={loading} title="共情"
                                     >
                                         <Heart className="w-4 h-4" />
                                     </Button>
-                                    <Button 
+                                    <Button
                                         variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-orange-100 hover:text-orange-500"
-                                        onClick={() => handleResonate('HUG')} disabled={loading} title="Hug"
+                                        onClick={() => handleResonate('HUG')} disabled={loading} title="拥抱"
                                     >
                                         <HandHeart className="w-4 h-4" />
                                     </Button>
-                                    <Button 
+                                    <Button
                                         variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-blue-100 hover:text-blue-500"
-                                        onClick={() => handleResonate('SAME_HERE')} disabled={loading} title="Same Here"
+                                        onClick={() => handleResonate('SAME_HERE')} disabled={loading} title="同感"
                                     >
                                         <MessageCircleHeart className="w-4 h-4" />
                                     </Button>
                                 </div>
                             )}
-                            
+
                             <Button
                                 variant="ghost"
                                 size="sm"

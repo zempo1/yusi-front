@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { Home } from './pages/Home'
 import { Room } from './pages/Room'
+import { RoomLobby } from './pages/RoomLobby'
 import { Diary } from './pages/Diary'
 import { Login } from './pages/Login'
 import { Register } from './pages/Register'
@@ -12,7 +13,7 @@ import { Plaza } from './pages/Plaza'
 
 const router = createBrowserRouter([
   { path: '/', element: <Home /> },
-  { path: '/room', element: <Home /> },
+  { path: '/room', element: <RoomLobby /> },
   { path: '/room/history', element: <History /> },
   { path: '/room/:code', element: <Room /> },
   { path: '/diary', element: <Diary /> },
