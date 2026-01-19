@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
 import { Layout } from '../components/Layout'
-import { RoomSubmit, RoomReport } from '../components/room'
+import { RoomSubmit, RoomReport, RoomChat } from '../components/room'
 import { getReport, getRoom, cancelRoom, startRoom, voteCancelRoom, getScenarios } from '../lib'
 import { useRoomStore } from '../stores'
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from '../components/ui'
@@ -431,6 +431,9 @@ export const Room = () => {
             scenario={room.scenario}
           />
         )}
+
+        {/* 房间聊天室 */}
+        <RoomChat roomCode={code!} roomStatus={room.status} />
       </div>
     </Layout>
   )

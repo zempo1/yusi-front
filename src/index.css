@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* 
+ * 兼容性说明：
+ * 1. @theme 是 Tailwind CSS v4 的新语法，某些旧浏览器可能不支持
+ * 2. 在 @layer base 中定义的变量会作为回退
+ * 3. 添加 -webkit 前缀确保 Safari 兼容性
+ */
+
 @theme {
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));

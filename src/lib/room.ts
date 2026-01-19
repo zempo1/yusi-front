@@ -127,3 +127,32 @@ export const getRoom = async (code: string): Promise<Room> => {
   const { data } = await api.get(`/room/${code}`);
   return data.data;
 };
+
+// ==================== 房间聊天相关 ====================
+
+export interface RoomMessage {
+  id: number;
+  roomCode: string;
+  senderId: string;
+  senderName: string;
+  content: string;
+  createdAt: string;
+}
+
+export const sendRoomMessage = async (roomCode: string, content: string): Promise<RoomMessage> => {
+  const { data } = await api.post("/room-chat/send", { roomCode, content });
+  return data.data;
+};
+
+export const getRoomChatHistory = async (roomCode: string): Promise<RoomMessage[]> => {
+  const { data } = await api.get("/room-chat/history", { params: { roomCode } });
+  return data.data;
+};
+
+export const pollRoomMessages = async (roomCode: string, after?: string): Promise<RoomMessage[]> => {
+  const { data } = await api.get("/room-chat/poll", {
+    params: { roomCode, after }
+  });
+  return data.data;
+};
+

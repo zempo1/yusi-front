@@ -1,0 +1,9 @@
+# Browsers that we support
+
+defaults
+not IE 11
+Android >= 6
+iOS >= 12
+Chrome >= 60
+Firefox >= 60
+Safari >= 12
