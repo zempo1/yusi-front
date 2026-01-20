@@ -170,6 +170,12 @@
   .glow-lg {
     box-shadow: 0 0 40px -10px hsl(var(--theme-primary) / 0.4);
   }
+
+  /* 竖向文字 */
+  .writing-mode-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
 }
 
 @layer components {

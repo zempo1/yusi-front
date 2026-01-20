@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { MessageCircle, Send, X, ChevronDown } from 'lucide-react'
+import { Users, Send, ChevronRight, ChevronLeft } from 'lucide-react'
 import { Button, Input } from '../ui'
 import { sendRoomMessage, pollRoomMessages, type RoomMessage } from '../../lib'
 import { toast } from 'sonner'
@@ -8,9 +8,44 @@ import { cn } from '../../utils'
 interface RoomChatProps {
     roomCode: string
     roomStatus: 'WAITING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+    memberNames?: Record<string, string>
 }
 
-export const RoomChat = ({ roomCode, roomStatus }: RoomChatProps) => {
+// 根据用户ID生成一个稳定的颜色
+const getUserColor = (userId: string) => {
+    const colors = [
+        'bg-rose-500',
+        'bg-orange-500',
+        'bg-amber-500',
+        'bg-emerald-500',
+        'bg-teal-500',
+        'bg-cyan-500',
+        'bg-blue-500',
+        'bg-indigo-500',
+        'bg-violet-500',
+        'bg-purple-500',
+        'bg-fuchsia-500',
+        'bg-pink-500',
+    ]
+    let hash = 0
+    for (let i = 0; i < userId.length; i++) {
+        hash = userId.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    return colors[Math.abs(hash) % colors.length]
+}
+
+// 获取用户名首字母作为头像
+const getInitials = (name: string) => {
+    if (!name) return '?'
+    // 如果是中文名，取第一个字
+    if (/[\u4e00-\u9fa5]/.test(name)) {
+        return name.charAt(0)
+    }
+    // 英文名取首字母
+    return name.charAt(0).toUpperCase()
+}
+
+export const RoomChat = ({ roomCode, roomStatus, memberNames = {} }: RoomChatProps) => {
     const [isOpen, setIsOpen] = useState(false)
     const [messages, setMessages] = useState<RoomMessage[]>([])
     const [input, setInput] = useState('')
@@ -38,9 +73,7 @@ export const RoomChat = ({ roomCode, roomStatus }: RoomChatProps) => {
                         const existingIds = new Set(prev.map(m => m.id))
                         const uniqueNew = newMessages.filter(m => !existingIds.has(m.id))
                         if (uniqueNew.length > 0) {
-                            // 更新最后消息时间
                             lastMessageTimeRef.current = uniqueNew[uniqueNew.length - 1].createdAt
-                            // 如果窗口关闭，增加未读计数
                             if (!isOpen) {
                                 setUnreadCount(prev => prev + uniqueNew.length)
                             }
@@ -54,15 +87,11 @@ export const RoomChat = ({ roomCode, roomStatus }: RoomChatProps) => {
             }
         }
 
-        // 初始加载
         fetchMessages()
-
-        // 每2秒轮询一次
         const interval = setInterval(fetchMessages, 2000)
         return () => clearInterval(interval)
     }, [roomCode, isOpen])
 
-    // 打开时滚动到底部并清除未读
     useEffect(() => {
         if (isOpen) {
             scrollToBottom()
@@ -103,134 +132,186 @@ export const RoomChat = ({ roomCode, roomStatus }: RoomChatProps) => {
         return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
     }
 
+    // 判断是否需要显示时间分隔符（超过5分钟）
+    const shouldShowTimeDivider = (currentMsg: RoomMessage, prevMsg?: RoomMessage) => {
+        if (!prevMsg) return true
+        const current = new Date(currentMsg.createdAt).getTime()
+        const prev = new Date(prevMsg.createdAt).getTime()
+        return current - prev > 5 * 60 * 1000 // 5分钟
+    }
+
+    // 判断是否是连续消息（同一用户连续发送）
+    const isContinuousMessage = (currentMsg: RoomMessage, prevMsg?: RoomMessage) => {
+        if (!prevMsg) return false
+        if (currentMsg.senderId !== prevMsg.senderId) return false
+        const current = new Date(currentMsg.createdAt).getTime()
+        const prev = new Date(prevMsg.createdAt).getTime()
+        return current - prev < 60 * 1000 // 1分钟内
+    }
+
     return (
         <>
-            {/* 聊天按钮 */}
+            {/* 侧边栏切换按钮 - 固定在屏幕右侧 */}
             <button
                 onClick={() => setIsOpen(true)}
                 className={cn(
-                    "fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40",
-                    "w-12 h-12 md:w-14 md:h-14 rounded-full",
-                    "bg-primary text-primary-foreground shadow-lg",
-                    "flex items-center justify-center",
-                    "hover:scale-110 transition-transform duration-200",
-                    "focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                    "fixed top-1/2 -translate-y-1/2 right-0 z-40",
+                    "w-8 h-24 rounded-l-lg",
+                    "bg-secondary/90 backdrop-blur border border-r-0 border-border",
+                    "flex flex-col items-center justify-center gap-1",
+                    "hover:bg-secondary transition-colors",
+                    "shadow-lg"
                 )}
             >
-                <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground writing-mode-vertical">聊天</span>
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-medium">
+                    <span className="absolute -left-1 top-2 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-medium">
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
+                <ChevronLeft className="w-3 h-3 text-muted-foreground" />
             </button>
 
-            {/* 聊天窗口 */}
-            {isOpen && (
-                <div className={cn(
-                    "fixed z-50",
-                    // 移动端全屏，PC端固定尺寸
-                    "inset-0 md:inset-auto",
-                    "md:bottom-6 md:right-6 md:w-96 md:h-[500px]",
-                    "flex flex-col",
-                    "bg-background md:rounded-xl md:shadow-2xl md:border"
-                )}>
-                    {/* 头部 */}
-                    <div className="flex items-center justify-between px-4 py-3 border-b bg-card/50">
-                        <div className="flex items-center gap-2">
-                            <MessageCircle className="w-5 h-5 text-primary" />
-                            <span className="font-semibold">房间聊天</span>
-                            <span className="text-xs text-muted-foreground">
-                                ({messages.length} 条消息)
-                            </span>
-                        </div>
-                        <button
-                            onClick={() => setIsOpen(false)}
-                            className="p-1 hover:bg-muted rounded-md transition-colors"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
+            {/* 侧边抽屉 */}
+            <div className={cn(
+                "fixed top-0 right-0 z-50 h-full",
+                "w-80 md:w-96",
+                "bg-background border-l border-border shadow-2xl",
+                "flex flex-col",
+                "transition-transform duration-300 ease-in-out",
+                isOpen ? "translate-x-0" : "translate-x-full"
+            )}>
+                {/* 头部 */}
+                <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+                    <div className="flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary" />
+                        <span className="font-semibold">房间讨论</span>
+                        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                            {messages.length}
+                        </span>
                     </div>
+                    <button
+                        onClick={() => setIsOpen(false)}
+                        className="p-1.5 hover:bg-muted rounded-md transition-colors"
+                    >
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                </div>
 
-                    {/* 消息列表 */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                        {messages.length === 0 && (
-                            <div className="text-center text-muted-foreground py-8">
-                                <MessageCircle className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                                <p>还没有消息</p>
-                                <p className="text-sm">发送第一条消息吧！</p>
-                            </div>
-                        )}
-                        {messages.map((msg) => {
+                {/* 消息列表 - Discord/Slack 风格 */}
+                <div className="flex-1 overflow-y-auto">
+                    {messages.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-8">
+                            <Users className="w-16 h-16 mb-3 opacity-20" />
+                            <p className="text-sm">开始和房间成员聊天吧</p>
+                            <p className="text-xs mt-1 opacity-70">在游戏开始前互相认识一下？</p>
+                        </div>
+                    )}
+
+                    <div className="px-3 py-2">
+                        {messages.map((msg, index) => {
                             const isMe = msg.senderId === currentUserId
+                            const prevMsg = index > 0 ? messages[index - 1] : undefined
+                            const showDivider = shouldShowTimeDivider(msg, prevMsg)
+                            const isContinuous = !showDivider && isContinuousMessage(msg, prevMsg)
+                            const displayName = memberNames[msg.senderId] || msg.senderName || '成员'
+
                             return (
-                                <div
-                                    key={msg.id}
-                                    className={cn(
-                                        "flex flex-col max-w-[80%]",
-                                        isMe ? "ml-auto items-end" : "items-start"
+                                <div key={msg.id}>
+                                    {/* 时间分隔符 */}
+                                    {showDivider && (
+                                        <div className="flex items-center justify-center my-3">
+                                            <div className="h-px flex-1 bg-border" />
+                                            <span className="px-3 text-[10px] text-muted-foreground">
+                                                {formatTime(msg.createdAt)}
+                                            </span>
+                                            <div className="h-px flex-1 bg-border" />
+                                        </div>
                                     )}
-                                >
-                                    {!isMe && (
-                                        <span className="text-xs text-muted-foreground mb-1 px-1">
-                                            {msg.senderName}
-                                        </span>
-                                    )}
+
+                                    {/* 消息项 - 列表式布局 */}
                                     <div className={cn(
-                                        "px-3 py-2 rounded-2xl break-words",
-                                        isMe
-                                            ? "bg-primary text-primary-foreground rounded-br-sm"
-                                            : "bg-muted rounded-bl-sm"
+                                        "group flex items-start gap-2 py-1 px-2 -mx-2 rounded-md",
+                                        "hover:bg-muted/50 transition-colors",
+                                        isContinuous ? "pt-0" : "pt-2"
                                     )}>
-                                        <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                        {/* 头像或占位 */}
+                                        {isContinuous ? (
+                                            <div className="w-8 shrink-0" />
+                                        ) : (
+                                            <div className={cn(
+                                                "w-8 h-8 rounded-md shrink-0",
+                                                "flex items-center justify-center",
+                                                "text-white text-sm font-medium",
+                                                getUserColor(msg.senderId)
+                                            )}>
+                                                {getInitials(displayName)}
+                                            </div>
+                                        )}
+
+                                        {/* 消息内容 */}
+                                        <div className="flex-1 min-w-0">
+                                            {!isContinuous && (
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className={cn(
+                                                        "text-sm font-medium truncate",
+                                                        isMe ? "text-primary" : "text-foreground"
+                                                    )}>
+                                                        {isMe ? '我' : displayName}
+                                                    </span>
+                                                    <span className="text-[10px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        {formatTime(msg.createdAt)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <p className="text-sm text-foreground/90 break-words whitespace-pre-wrap">
+                                                {msg.content}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <span className="text-[10px] text-muted-foreground mt-1 px-1">
-                                        {formatTime(msg.createdAt)}
-                                    </span>
                                 </div>
                             )
                         })}
                         <div ref={messagesEndRef} />
                     </div>
-
-                    {/* 滚动到底部按钮 */}
-                    {messages.length > 5 && (
-                        <button
-                            onClick={scrollToBottom}
-                            className="absolute bottom-20 right-4 p-2 bg-muted rounded-full shadow-md hover:bg-muted/80 transition-colors"
-                        >
-                            <ChevronDown className="w-4 h-4" />
-                        </button>
-                    )}
-
-                    {/* 输入框 */}
-                    <div className="border-t p-3 bg-card/50 pb-safe">
-                        {canSend ? (
-                            <div className="flex gap-2">
-                                <Input
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    placeholder="输入消息..."
-                                    className="flex-1"
-                                    maxLength={500}
-                                />
-                                <Button
-                                    onClick={handleSend}
-                                    disabled={!input.trim() || sending}
-                                    size="icon"
-                                    className="shrink-0"
-                                >
-                                    <Send className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        ) : (
-                            <div className="text-center text-muted-foreground text-sm py-2">
-                                房间已结束，无法发送消息
-                            </div>
-                        )}
-                    </div>
                 </div>
+
+                {/* 输入框 */}
+                <div className="border-t p-3 bg-muted/20">
+                    {canSend ? (
+                        <div className="flex gap-2">
+                            <Input
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                placeholder="发送消息..."
+                                className="flex-1 bg-background"
+                                maxLength={500}
+                            />
+                            <Button
+                                onClick={handleSend}
+                                disabled={!input.trim() || sending}
+                                size="icon"
+                                className="shrink-0"
+                            >
+                                <Send className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    ) : (
+                        <div className="text-center text-muted-foreground text-sm py-2 bg-muted/30 rounded-md">
+                            {roomStatus === 'COMPLETED' ? '游戏已结束' : '房间已解散'}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* 遮罩层 - 移动端 */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/20 md:hidden"
+                    onClick={() => setIsOpen(false)}
+                />
             )}
         </>
     )

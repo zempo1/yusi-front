@@ -433,7 +433,7 @@ export const Room = () => {
         )}
 
         {/* 房间聊天室 */}
-        <RoomChat roomCode={code!} roomStatus={room.status} />
+        <RoomChat roomCode={code!} roomStatus={room.status} memberNames={room.memberNames} />
       </div>
     </Layout>
   )
