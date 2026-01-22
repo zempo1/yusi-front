@@ -49,45 +49,45 @@ export const SoulCard = ({ card }: SoulCardProps) => {
     }
 
     return (
-        <div className="break-inside-avoid mb-4">
-            <Card className="overflow-hidden hover:shadow-md transition-all duration-300 border-primary/10 bg-gradient-to-br from-card to-secondary/30">
-                <div className="p-4 space-y-3">
+        <div className="break-inside-avoid mb-6">
+            <Card className="glass-card overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 border-white/20 dark:border-white/5 group">
+                <div className="p-5 space-y-4">
                     <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-xs font-normal opacity-70">
+                        <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 border-primary/20 text-primary bg-primary/5">
                             {card.type === 'DIARY' ? '日记' : '情景'}
                         </Badge>
-                        <span className="text-[10px] text-muted-foreground">{new Date(card.createdAt).toLocaleDateString()}</span>
+                        <span className="text-[10px] text-muted-foreground font-medium opacity-60">{new Date(card.createdAt).toLocaleDateString()}</span>
                     </div>
 
-                    <div className="text-sm leading-relaxed whitespace-pre-wrap font-serif text-foreground/90 min-h-[80px]">
+                    <div className="text-sm leading-7 whitespace-pre-wrap font-sans text-foreground/90 min-h-[80px]">
                         {card.content.length > 150 ? card.content.substring(0, 150) + '...' : card.content}
                     </div>
 
-                    <div className="flex items-center justify-between pt-2">
-                        <div className="text-xs text-muted-foreground italic flex items-center gap-1">
-                            {card.emotion && <span className="bg-primary/5 px-1.5 py-0.5 rounded text-primary/70">#{EMOTION_LABELS[card.emotion] || card.emotion}</span>}
+                    <div className="flex items-center justify-between pt-3 border-t border-dashed border-border/50">
+                        <div className="text-xs text-muted-foreground flex items-center gap-1">
+                            {card.emotion && <span className="inline-flex items-center px-2 py-1 rounded-md bg-secondary/50 text-secondary-foreground text-[10px] font-medium">#{EMOTION_LABELS[card.emotion] || card.emotion}</span>}
                         </div>
 
                         <div className="relative">
                             {!resonated && showOptions && (
-                                <div className="absolute bottom-full right-0 mb-2 flex gap-1 bg-background border shadow-lg rounded-full p-1 z-10 animate-in fade-in slide-in-from-bottom-2">
+                                <div className="absolute bottom-full right-0 mb-3 flex gap-2 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border border-white/20 shadow-xl rounded-full p-1.5 z-10 animate-in fade-in slide-in-from-bottom-2 zoom-in-95">
                                     <Button
-                                        variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-red-100 hover:text-red-500"
+                                        variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-red-50 hover:text-red-500 transition-colors"
                                         onClick={() => handleResonate('EMPATHY')} disabled={loading} title="共情"
                                     >
-                                        <Heart className="w-4 h-4" />
+                                        <Heart className="w-5 h-5" />
                                     </Button>
                                     <Button
-                                        variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-orange-100 hover:text-orange-500"
+                                        variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-orange-50 hover:text-orange-500 transition-colors"
                                         onClick={() => handleResonate('HUG')} disabled={loading} title="拥抱"
                                     >
-                                        <HandHeart className="w-4 h-4" />
+                                        <HandHeart className="w-5 h-5" />
                                     </Button>
                                     <Button
-                                        variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-blue-100 hover:text-blue-500"
+                                        variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-blue-50 hover:text-blue-500 transition-colors"
                                         onClick={() => handleResonate('SAME_HERE')} disabled={loading} title="同感"
                                     >
-                                        <MessageCircleHeart className="w-4 h-4" />
+                                        <MessageCircleHeart className="w-5 h-5" />
                                     </Button>
                                 </div>
                             )}
@@ -95,12 +95,17 @@ export const SoulCard = ({ card }: SoulCardProps) => {
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className={cn("h-7 px-2 text-xs gap-1 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30", resonated && "text-red-500")}
+                                className={cn(
+                                    "h-8 px-3 text-xs gap-1.5 rounded-full transition-all duration-300",
+                                    resonated 
+                                        ? "text-red-500 bg-red-50 dark:bg-red-950/20" 
+                                        : "hover:bg-primary/5 hover:text-primary"
+                                )}
                                 onClick={() => !resonated && setShowOptions(!showOptions)}
                                 disabled={resonated && !loading}
                             >
-                                <Heart className={cn("w-3.5 h-3.5", resonated && "fill-current")} />
-                                {count > 0 && count}
+                                <Heart className={cn("w-4 h-4 transition-transform", resonated && "fill-current scale-110")} />
+                                <span className="font-medium">{count > 0 ? count : '共鸣'}</span>
                             </Button>
                         </div>
                     </div>

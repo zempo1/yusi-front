@@ -1,4 +1,3 @@
-import { Layout } from '../components/Layout'
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui'
@@ -194,7 +193,7 @@ export const Home = () => {
   ]
 
   return (
-    <Layout>
+    <>
       <GlowCursor />
 
       <div className="relative">
@@ -425,6 +424,6 @@ export const Home = () => {
           </motion.div>
         </section>
       </div>
-    </Layout>
+    </>
   )
 }

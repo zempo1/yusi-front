@@ -2,10 +2,10 @@
 
 /* 
  * 兼容性说明：
- * 1. @theme 是 Tailwind CSS v4 的新语法，某些旧浏览器可能不支持
- * 2. 在 @layer base 中定义的变量会作为回退
- * 3. 添加 -webkit 前缀确保 Safari 兼容性
+ * 1. @theme 是 Tailwind CSS v4 的新语法
+ * 2. 引入 Google Fonts: Outfit (现代、几何、友好)
  */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 
 @theme {
   --color-border: hsl(var(--border));
@@ -38,60 +38,83 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  
+  /* 自定义动画 */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
 }
 
 @layer base {
   :root {
-    /* 默认主题变量（由 themeStore 动态设置） */
-    --theme-primary: 262 83% 58%;
-    --theme-primary-light: 262 83% 68%;
-    --theme-gradient: linear-gradient(135deg, #8b5cf6 0%, #a855f7 50%, #d946ef 100%);
-    --theme-gradient-subtle: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(168, 85, 247, 0.05) 100%);
-
-    /* 亮色模式基础色 */
-    --background: 0 0% 99%;
-    --foreground: 240 10% 3.9%;
+    /* Luminous Ethereal Theme - Light Mode */
+    --background: 260 30% 98%; /* Very light purple tint */
+    --foreground: 260 40% 10%; /* Deep purple-black */
+    
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 260 40% 10%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: var(--theme-primary);
+    --popover-foreground: 260 40% 10%;
+    
+    --primary: 265 89% 60%; /* Vibrant Purple */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    
+    --secondary: 260 30% 94%;
+    --secondary-foreground: 265 89% 40%;
+    
+    --muted: 260 20% 94%;
+    --muted-foreground: 260 10% 45%;
+    
+    --accent: 260 30% 92%;
+    --accent-foreground: 265 89% 40%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: var(--theme-primary);
-    --radius: 0.75rem;
+    
+    --border: 260 20% 90%;
+    --input: 260 20% 90%;
+    --ring: 265 89% 60%;
+    
+    --radius: 1rem; /* More rounded for friendly feel */
+    
+    --theme-gradient: linear-gradient(135deg, #8b5cf6 0%, #d946ef 50%, #f472b6 100%);
+    --theme-gradient-subtle: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(217, 70, 239, 0.05) 100%);
   }
 
   .dark {
-    /* 暗色模式 - 更优雅的深色调 */
-    --background: 240 15% 6%;
-    --foreground: 0 0% 95%;
-    --card: 240 12% 8%;
-    --card-foreground: 0 0% 95%;
-    --popover: 240 12% 8%;
-    --popover-foreground: 0 0% 95%;
-    --primary: var(--theme-primary-light);
-    --primary-foreground: 240 15% 6%;
-    --secondary: 240 8% 12%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 240 8% 12%;
-    --muted-foreground: 240 5% 55%;
-    --accent: 240 8% 14%;
-    --accent-foreground: 0 0% 95%;
-    --destructive: 0 62.8% 45%;
+    /* Luminous Ethereal Theme - Dark Mode (Deep Space) */
+    --background: 265 45% 5%; /* Very deep purple/black */
+    --foreground: 260 20% 96%;
+    
+    --card: 265 40% 8%; /* Slightly lighter than bg */
+    --card-foreground: 260 20% 96%;
+    
+    --popover: 265 40% 8%;
+    --popover-foreground: 260 20% 96%;
+    
+    --primary: 265 89% 70%; /* Brighter purple for dark mode */
+    --primary-foreground: 265 45% 5%;
+    
+    --secondary: 265 30% 15%;
+    --secondary-foreground: 260 20% 96%;
+    
+    --muted: 265 30% 15%;
+    --muted-foreground: 260 15% 65%;
+    
+    --accent: 265 30% 20%;
+    --accent-foreground: 260 20% 96%;
+    
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 8% 15%;
-    --input: 240 8% 15%;
-    --ring: var(--theme-primary-light);
+    
+    --border: 265 30% 15%;
+    --input: 265 30% 15%;
+    --ring: 265 89% 70%;
   }
 
   html,
@@ -103,24 +126,11 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: 'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    font-family: 'Outfit', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.3s ease, color 0.3s ease;
-  }
-
-  /* 减少动画模式 */
-  .reduce-motion * {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-
-  /* 禁用玻璃态模式 */
-  .no-glass .glass,
-  .no-glass [class*="backdrop-blur"] {
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    transition: background-color 0.5s ease, color 0.5s ease;
+    overflow-x: hidden;
   }
 }
 
@@ -129,139 +139,117 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  /* 主题渐变类 */
-  .gradient-text {
+  /* Text Gradients */
+  .text-gradient {
     background: var(--theme-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  .gradient-bg {
-    background: var(--theme-gradient);
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #FDE68A 0%, #D97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
-  .gradient-bg-subtle {
-    background: var(--theme-gradient-subtle);
+  /* Glass Effects */
+  .glass {
+    @apply bg-white/60 backdrop-blur-xl border border-white/40 shadow-sm;
   }
 
-  .gradient-border {
-    position: relative;
+  .dark .glass {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-lg;
   }
 
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: var(--theme-gradient);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-md border border-white/30 shadow-lg transition-all duration-300;
   }
 
-  /* 光晕效果 */
-  .glow {
-    box-shadow: 0 0 20px -5px hsl(var(--theme-primary) / 0.5);
+  .dark .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/10 shadow-lg;
+  }
+
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-2xl border border-white/50 shadow-xl;
+  }
+  
+  .dark .glass-panel {
+    @apply bg-[#0f0c29]/80 backdrop-blur-2xl border border-white/10 shadow-2xl;
+  }
+
+  /* Glow Effects */
+  .glow-sm {
+    box-shadow: 0 0 15px -3px hsl(var(--primary) / 0.3);
+  }
+
+  .glow-md {
+    box-shadow: 0 0 25px -5px hsl(var(--primary) / 0.4);
   }
 
   .glow-lg {
-    box-shadow: 0 0 40px -10px hsl(var(--theme-primary) / 0.4);
+    box-shadow: 0 0 40px -10px hsl(var(--primary) / 0.5);
   }
-
-  /* 竖向文字 */
-  .writing-mode-vertical {
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
+  
+  .glow-text {
+    text-shadow: 0 0 20px hsl(var(--primary) / 0.5);
   }
 }
 
 @layer components {
-  .glass {
-    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-sm;
-  }
-
-  .dark .glass {
-    @apply bg-black/50 border-white/10;
-  }
-
-  .card {
-    @apply bg-card text-card-foreground rounded-xl border border-border shadow-sm transition-all duration-200 hover:shadow-md;
-  }
-
-  .card-elevated {
-    @apply bg-card text-card-foreground rounded-xl border border-border/50 shadow-lg transition-all duration-300 hover:shadow-xl hover:border-primary/20;
-  }
-
-  .card-glass {
-    @apply backdrop-blur-xl bg-card/80 text-card-foreground rounded-xl border border-border/30 shadow-lg transition-all duration-300;
-  }
-
-  .btn {
-    @apply inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
-  }
-
-  .btn-gradient {
-    background: var(--theme-gradient);
-    @apply text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:scale-105;
-  }
-
   .container-page {
-    @apply max-w-6xl mx-auto px-4 md:px-6;
+    @apply max-w-7xl mx-auto px-4 md:px-8;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95;
   }
 
-  /* 动态装饰背景 */
-  .bg-mesh {
-    background-color: hsl(var(--background));
-    background-image:
-      radial-gradient(at 40% 20%, hsl(var(--theme-primary) / 0.1) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsl(280 70% 50% / 0.08) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsl(200 80% 50% / 0.08) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, hsl(340 80% 50% / 0.05) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsl(var(--theme-primary) / 0.08) 0px, transparent 50%);
+  /* Ambient Background */
+  .bg-ambient {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    background: hsl(var(--background));
   }
 
-  .dark .bg-mesh {
-    background-image:
-      radial-gradient(at 40% 20%, hsl(var(--theme-primary) / 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, hsl(280 70% 50% / 0.1) 0px, transparent 50%),
-      radial-gradient(at 0% 50%, hsl(200 80% 50% / 0.1) 0px, transparent 50%),
-      radial-gradient(at 80% 50%, hsl(340 80% 50% / 0.08) 0px, transparent 50%),
-      radial-gradient(at 0% 100%, hsl(var(--theme-primary) / 0.1) 0px, transparent 50%);
+  .bg-ambient::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 60vw;
+    height: 60vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, hsl(var(--primary) / 0.15), transparent 70%);
+    filter: blur(80px);
+    animation: float 15s ease-in-out infinite alternate;
   }
 
-  /* 输入框美化 */
-  input:focus,
-  textarea:focus {
-    outline: none;
-    border-color: hsl(var(--theme-primary) / 0.5);
-    box-shadow: 0 0 0 3px hsl(var(--theme-primary) / 0.1);
+  .bg-ambient::after {
+    content: '';
+    position: absolute;
+    bottom: -10%;
+    left: -10%;
+    width: 50vw;
+    height: 50vw;
+    border-radius: 50%;
+    background: radial-gradient(circle, hsl(320 80% 60% / 0.1), transparent 70%);
+    filter: blur(60px);
+    animation: float 20s ease-in-out infinite alternate-reverse;
   }
-
-  /* 滚动条美化 */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+  
+  /* Inputs */
+  input, textarea, select {
+    @apply transition-all duration-300;
   }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.3);
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.5);
-  }
-
-  /* 选中文本样式 */
-  ::selection {
-    background: hsl(var(--theme-primary) / 0.3);
-    color: hsl(var(--foreground));
+  
+  input:focus, textarea:focus, select:focus {
+    @apply ring-2 ring-primary/20 border-primary/50 shadow-[0_0_0_4px_rgba(var(--primary),0.1)];
   }
 }

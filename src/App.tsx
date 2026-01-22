@@ -1,4 +1,5 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom'
+import { Layout } from './components/Layout'
 import { Home } from './pages/Home'
 import { Room } from './pages/Room'
 import { RoomLobby } from './pages/RoomLobby'
@@ -13,16 +14,21 @@ import Settings from './pages/Settings'
 import { Plaza } from './pages/Plaza'
 
 const router = createBrowserRouter([
-  { path: '/', element: <Home /> },
-  { path: '/room', element: <RoomLobby /> },
-  { path: '/room/history', element: <History /> },
-  { path: '/room/:code', element: <Room /> },
-  { path: '/diary', element: <Diary /> },
-  { path: '/plaza', element: <Plaza /> },
-  { path: '/match', element: <Match /> },
-  { path: '/settings', element: <Settings /> },
-  { path: '/login', element: <Login /> },
-  { path: '/register', element: <Register /> },
+  {
+    element: <Layout><Outlet /></Layout>,
+    children: [
+      { path: '/', element: <Home /> },
+      { path: '/room', element: <RoomLobby /> },
+      { path: '/room/history', element: <History /> },
+      { path: '/room/:code', element: <Room /> },
+      { path: '/diary', element: <Diary /> },
+      { path: '/plaza', element: <Plaza /> },
+      { path: '/match', element: <Match /> },
+      { path: '/settings', element: <Settings /> },
+      { path: '/login', element: <Login /> },
+      { path: '/register', element: <Register /> },
+    ]
+  }
 ])
 
 function App() {

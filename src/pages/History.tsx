@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Layout } from '../components/Layout'
 import { getHistory } from '../lib'
 import type { Room } from '../lib'
 import { Card, CardContent, Badge } from '../components/ui'
@@ -19,18 +18,15 @@ export const History = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex h-[50vh] flex-col items-center justify-center text-muted-foreground gap-4">
+      <div className="flex h-[50vh] flex-col items-center justify-center text-muted-foreground gap-4">
             <div className="text-lg">加载历史记录...</div>
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </Layout>
     )
   }
 
   return (
-    <Layout>
-      <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto">
         <h2 className="text-2xl font-bold tracking-tight">情景室历史</h2>
         
         {rooms.length === 0 ? (
@@ -81,6 +77,5 @@ export const History = () => {
           </div>
         )}
       </div>
-    </Layout>
   )
 }

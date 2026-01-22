@@ -1,4 +1,3 @@
-import { Layout } from '../components/Layout'
 import { SoulCard } from '../components/plaza/SoulCard'
 import { getFeed, submitToPlaza, type SoulCard as SoulCardType, useRequireAuth } from '../lib'
 import { useState, useEffect } from 'react'
@@ -98,8 +97,7 @@ export const Plaza = () => {
     }
 
     return (
-        <Layout>
-            <div className="space-y-6 container mx-auto max-w-5xl relative min-h-screen pb-20">
+        <div className="space-y-6 container mx-auto max-w-5xl relative min-h-screen pb-20">
                 <div className="text-center space-y-4 py-8">
                     <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 font-display">
                         灵魂广场
@@ -210,6 +208,5 @@ export const Plaza = () => {
                     </div>
                 )}
             </div>
-        </Layout>
     )
 }

@@ -1,4 +1,3 @@
-import { Layout } from '../components/Layout'
 import { RoomCreate, RoomJoin, ScenarioSubmit } from '../components/room'
 import { motion } from 'framer-motion'
 import { Sparkles, Users, PenTool, History } from 'lucide-react'
@@ -7,8 +6,7 @@ import { Button } from '../components/ui'
 
 export const RoomLobby = () => {
     return (
-        <Layout>
-            <motion.div
+        <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -117,6 +115,5 @@ export const RoomLobby = () => {
                     </div>
                 </motion.section>
             </motion.div>
-        </Layout>
     )
 }

@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom'
 import { useEffect, useState, useRef } from 'react'
-import { Layout } from '../components/Layout'
 import { RoomSubmit, RoomReport, RoomChat } from '../components/room'
 import { getReport, getRoom, cancelRoom, startRoom, voteCancelRoom, getScenarios } from '../lib'
 import { useRoomStore } from '../stores'
@@ -153,20 +152,17 @@ export const Room = () => {
 
   if (!room) {
     return (
-      <Layout>
-        <div className="flex h-[50vh] flex-col items-center justify-center text-muted-foreground gap-4">
+      <div className="flex h-[50vh] flex-col items-center justify-center text-muted-foreground gap-4">
           <div className="text-lg">正在寻找房间信息...</div>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </Layout>
     )
   }
 
   // Polling / Waiting State
   if (room.status === 'COMPLETED' && !report) {
     return (
-      <Layout>
-        <div className="container mx-auto max-w-4xl py-8 px-4">
+      <div className="container mx-auto max-w-4xl py-8 px-4">
           <Card className="border-2 border-dashed border-primary/20">
             <CardContent className="flex flex-col items-center justify-center py-20 space-y-6">
               <div className="relative">
@@ -181,19 +177,16 @@ export const Room = () => {
             </CardContent>
           </Card>
         </div>
-      </Layout>
     )
   }
 
   if (room.status === 'CANCELLED') {
     return (
-      <Layout>
-        <div className="flex h-[50vh] flex-col items-center justify-center text-muted-foreground gap-4">
+      <div className="flex h-[50vh] flex-col items-center justify-center text-muted-foreground gap-4">
           <AlertCircle className="w-12 h-12 text-destructive" />
           <div className="text-lg">房间已被解散</div>
           <Button onClick={() => window.location.href = '/'}>返回首页</Button>
         </div>
-      </Layout>
     )
   }
 
@@ -202,8 +195,7 @@ export const Room = () => {
   const isOwner = room.ownerId === userId
 
   return (
-    <Layout>
-      <div className="space-y-4 md:space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-4 md:space-y-6 max-w-5xl mx-auto">
         {/* Header Section */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center justify-between w-full md:w-auto">
@@ -435,6 +427,5 @@ export const Room = () => {
         {/* 房间聊天室 */}
         <RoomChat roomCode={code!} roomStatus={room.status} memberNames={room.memberNames} />
       </div>
-    </Layout>
   )
 }

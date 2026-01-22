@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { Layout } from '../components/Layout'
 import { Button, Card } from '../components/ui'
 import { useAuthStore } from '../store/authStore'
 import { matchApi } from '../lib/api'
@@ -94,20 +93,18 @@ export const Match = () => {
 
   if (!user) {
     return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <Sparkles className="h-12 w-12 text-muted-foreground/30" />
           <p className="text-muted-foreground">灵魂匹配需要登录后使用</p>
           <Link to="/login" state={{ from: '/match' }}>
             <Button>前往登录</Button>
           </Link>
         </div>
-      </Layout>
     )
   }
 
   return (
-    <Layout>
+    <>
       <div className="container-page py-8 max-w-4xl">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -261,6 +258,6 @@ export const Match = () => {
         onClose={() => setIsChatOpen(false)}
         matchId={currentMatchId}
       />
-    </Layout>
+    </>
   )
 }

@@ -3,7 +3,6 @@ import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { Button, Input, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui'
 import { authApi } from '../lib/api'
 import { useAuthStore } from '../store/authStore'
-import { Layout } from '../components/Layout'
 import { toast } from 'sonner'
 
 export const Login = () => {
@@ -39,8 +38,7 @@ export const Login = () => {
   }
 
   return (
-    <Layout>
-      <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="w-full max-w-md mx-4">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">登录 Yusi</CardTitle>
@@ -90,6 +88,5 @@ export const Login = () => {
           </form>
         </Card>
       </div>
-    </Layout>
   )
 }
