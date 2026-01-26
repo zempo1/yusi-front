@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { cn } from '../utils'
 import { LogOut, User as UserIcon, Home, LayoutGrid, Book, Heart, Users, Settings } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
+import { ThemeSwitcher } from './ThemeSwitcher'
 import { Button } from './ui/Button'
 import { initializeTheme } from '../stores/themeStore'
 
@@ -33,7 +34,7 @@ export const Layout = ({ children }: LayoutProps) => {
       <div className="bg-ambient fixed inset-0 z-[-1]" />
       <div className="fixed inset-0 z-[-1] opacity-30 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] brightness-100 contrast-150 mix-blend-overlay pointer-events-none" />
 
-      <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-white/50 dark:bg-black/20 backdrop-blur-2xl">
+      <header className="sticky top-0 z-[100] w-full border-b border-white/10 bg-white/50 dark:bg-black/20 backdrop-blur-2xl">
         <div className="container-page flex h-16 items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center space-x-2 group relative">
@@ -74,6 +75,8 @@ export const Layout = ({ children }: LayoutProps) => {
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+            
             {user ? (
               <div className="flex items-center gap-3 pl-4 border-l border-white/10">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/50 border border-white/5 backdrop-blur-sm">

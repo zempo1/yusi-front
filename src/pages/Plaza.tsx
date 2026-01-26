@@ -1,10 +1,11 @@
 import { SoulCard } from '../components/plaza/SoulCard'
 import { getFeed, submitToPlaza, type SoulCard as SoulCardType, useRequireAuth } from '../lib'
 import { useState, useEffect } from 'react'
-import { Loader2, PenLine, X } from 'lucide-react'
+import { Loader2, PenLine, X, Sparkles } from 'lucide-react'
 import { Button, Textarea } from '../components/ui'
 import { toast } from 'sonner'
 import { cn } from '../utils'
+import { motion } from 'framer-motion'
 
 // 情感标签映射：后端值 -> 中文显示
 const EMOTION_MAP: Record<string, string> = {
@@ -97,116 +98,163 @@ export const Plaza = () => {
     }
 
     return (
-        <div className="space-y-6 container mx-auto max-w-5xl relative min-h-screen pb-20">
-                <div className="text-center space-y-4 py-8">
-                    <h2 className="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 font-display">
+        <div className="min-h-screen relative">
+             <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-primary/5 to-transparent pointer-events-none -z-10" />
+
+            <div className="space-y-8 container mx-auto max-w-6xl relative pb-20 px-4 pt-12">
+                <div className="text-center space-y-4">
+                     <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/50 text-xs font-medium text-muted-foreground mb-2"
+                    >
+                        <Sparkles className="w-3 h-3" />
+                        <span>匿名分享 · 温暖共鸣</span>
+                    </motion.div>
+                    <motion.h2 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1, duration: 0.5 }}
+                        className="text-4xl md:text-6xl font-bold text-gradient font-display"
+                    >
                         灵魂广场
-                    </h2>
-                    <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+                    </motion.h2>
+                    <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                        className="text-muted-foreground text-lg max-w-xl mx-auto"
+                    >
                         在这里，遇见共鸣的灵魂。匿名分享，温暖相拥。
-                    </p>
+                    </motion.p>
                 </div>
 
                 {/* Emotion Filter */}
-                <div className="flex justify-center gap-2 flex-wrap pb-4">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className="flex justify-center gap-2 flex-wrap pb-4"
+                >
                     {EMOTIONS.map(emo => (
                         <button
                             key={emo}
                             onClick={() => handleEmotionSelect(emo)}
                             className={cn(
-                                "px-4 py-1.5 rounded-full text-sm transition-all border",
+                                "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-300",
                                 selectedEmotion === emo
-                                    ? "bg-primary text-primary-foreground border-primary shadow-md"
-                                    : "bg-background hover:bg-muted text-muted-foreground border-transparent hover:border-border"
+                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25 scale-105"
+                                    : "bg-card hover:bg-muted text-muted-foreground hover:text-foreground border border-transparent hover:border-border shadow-sm"
                             )}
                         >
                             {EMOTION_MAP[emo] || emo}
                         </button>
                     ))}
-                </div>
+                </motion.div>
 
                 {/* Masonry-like Grid */}
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-4">
-                    {cards.map(card => (
-                        <SoulCard key={card.id} card={card} />
+                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                    {cards.map((card, index) => (
+                        <motion.div
+                            key={card.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="break-inside-avoid"
+                        >
+                            <SoulCard card={card} />
+                        </motion.div>
                     ))}
                 </div>
 
                 {loading && (
-                    <div className="flex justify-center py-8">
-                        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                    <div className="flex justify-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
                     </div>
                 )}
 
                 {!loading && hasMore && cards.length > 0 && (
-                    <div className="flex justify-center py-8">
-                        <Button variant="outline" onClick={handleLoadMore}>
+                    <div className="flex justify-center py-12">
+                        <Button variant="outline" onClick={handleLoadMore} className="rounded-full px-8">
                             加载更多
                         </Button>
                     </div>
                 )}
 
                 {!loading && !hasMore && cards.length > 0 && (
-                    <div className="text-center text-muted-foreground py-8 text-sm">
+                    <div className="text-center text-muted-foreground py-12 text-sm flex flex-col items-center gap-2">
+                        <div className="w-12 h-1 bg-muted rounded-full" />
                         已经到底啦 ~
                     </div>
                 )}
 
                 {!loading && cards.length === 0 && (
-                    <div className="text-center text-muted-foreground py-12">
-                        {selectedEmotion === 'All' ? '广场还很空旷，去发布第一个瞬间吧。' : '这个情绪下还没有内容哦。'}
+                    <div className="text-center text-muted-foreground py-24 bg-muted/20 rounded-3xl border border-dashed border-border/50">
+                        <Sparkles className="w-12 h-12 mx-auto text-muted-foreground/20 mb-4" />
+                        <p>{selectedEmotion === 'All' ? '广场还很空旷，去发布第一个瞬间吧。' : '这个情绪下还没有内容哦。'}</p>
                     </div>
                 )}
 
                 {/* FAB */}
                 <div className="fixed bottom-8 right-8 z-50">
-                    <Button
-                        size="icon"
-                        className="h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white"
-                        onClick={() => {
-                            if (requireAuth('发布心声需要登录')) {
-                                setIsPostOpen(true)
-                            }
-                        }}
+                    <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                     >
-                        <PenLine className="w-6 h-6" />
-                    </Button>
+                        <Button
+                            size="icon"
+                            className="h-16 w-16 rounded-full shadow-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700 text-white border-4 border-background"
+                            onClick={() => {
+                                if (requireAuth('发布心声需要登录')) {
+                                    setIsPostOpen(true)
+                                }
+                            }}
+                        >
+                            <PenLine className="w-7 h-7" />
+                        </Button>
+                    </motion.div>
                 </div>
 
                 {/* Post Modal Overlay */}
                 {isPostOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="w-full max-w-lg bg-background rounded-xl shadow-2xl border animate-in zoom-in-95 duration-200 p-6 space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h3 className="text-xl font-semibold">投递心声</h3>
-                                <Button variant="ghost" size="icon" onClick={() => setIsPostOpen(false)}>
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="w-full max-w-lg bg-card rounded-2xl shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200 p-6 space-y-6">
+                            <div className="flex justify-between items-center border-b border-border/50 pb-4">
+                                <h3 className="text-xl font-bold flex items-center gap-2">
+                                    <Sparkles className="w-5 h-5 text-primary" />
+                                    投递心声
+                                </h3>
+                                <Button variant="ghost" size="icon" onClick={() => setIsPostOpen(false)} className="rounded-full hover:bg-destructive/10 hover:text-destructive">
                                     <X className="w-5 h-5" />
                                 </Button>
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 <Textarea
                                     placeholder="写下此刻的想法，匿名投递到广场..."
-                                    className="min-h-[150px] resize-none text-base"
+                                    className="min-h-[180px] resize-none text-base bg-muted/30 border-transparent focus:border-primary/50 focus:ring-0 rounded-xl p-4 leading-relaxed"
                                     value={postContent}
                                     onChange={e => setPostContent(e.target.value)}
                                 />
-                                <p className="text-xs text-muted-foreground text-right">
-                                    {postContent.length}/500
-                                </p>
+                                <div className="flex justify-between items-center text-xs text-muted-foreground px-1">
+                                    <span>匿名发布，请友善发言</span>
+                                    <span>{postContent.length}/500</span>
+                                </div>
                             </div>
-                            <div className="flex justify-end gap-2 pt-2">
-                                <Button variant="outline" onClick={() => setIsPostOpen(false)}>取消</Button>
+                            <div className="flex justify-end gap-3 pt-2">
+                                <Button variant="ghost" onClick={() => setIsPostOpen(false)}>取消</Button>
                                 <Button
                                     onClick={handlePost}
                                     isLoading={posting}
-                                    className="bg-gradient-to-r from-pink-500 to-purple-600 text-white"
+                                    className="px-6 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20"
                                 >
-                                    投递
+                                    发布
                                 </Button>
                             </div>
                         </div>
                     </div>
                 )}
             </div>
+        </div>
     )
 }
