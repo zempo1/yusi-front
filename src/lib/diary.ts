@@ -12,6 +12,12 @@ export interface Diary {
   clientEncrypted?: boolean // true = content encrypted by client
   createTime: string
   updateTime: string
+  // Geo-location fields (Epic 5)
+  latitude?: number
+  longitude?: number
+  address?: string
+  placeName?: string
+  placeId?: string
 }
 
 export interface WriteDiaryRequest {
@@ -23,6 +29,12 @@ export interface WriteDiaryRequest {
   clientEncrypted?: boolean
   /** 明文内容，用于 RAG 向量化（当允许 RAG 时发送） */
   plainContent?: string
+  // Geo-location fields (Epic 5)
+  latitude?: number
+  longitude?: number
+  address?: string
+  placeName?: string
+  placeId?: string
 }
 
 export interface EditDiaryRequest {
@@ -35,6 +47,12 @@ export interface EditDiaryRequest {
   clientEncrypted?: boolean
   /** 明文内容，用于 RAG 向量化（当允许 RAG 时发送） */
   plainContent?: string
+  // Geo-location fields (Epic 5)
+  latitude?: number
+  longitude?: number
+  address?: string
+  placeName?: string
+  placeId?: string
 }
 
 export interface PagedModel<T> {

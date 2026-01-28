@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useEncryptionStore } from '../stores/encryptionStore';
 import { useAuthStore } from '../store/authStore';
+import { LocationManager } from '../components/LocationManager';
 import '../styles/settings.css';
 
 export default function Settings() {
@@ -23,7 +24,7 @@ export default function Settings() {
     } = useEncryptionStore();
 
     // 表单状态
-    const [activeTab, setActiveTab] = useState<'security' | 'account'>('security');
+    const [activeTab, setActiveTab] = useState<'security' | 'locations' | 'account'>('security');
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [showUnlockModal, setShowUnlockModal] = useState(false);
     const [showChangeKeyModal, setShowChangeKeyModal] = useState(false);
@@ -151,6 +152,12 @@ export default function Settings() {
                     onClick={() => setActiveTab('security')}
                 >
                     🔐 安全与隐私
+                </button>
+                <button
+                    className={`tab ${activeTab === 'locations' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('locations')}
+                >
+                    📍 地点管理
                 </button>
                 <button
                     className={`tab ${activeTab === 'account' ? 'active' : ''}`}
@@ -293,6 +300,12 @@ export default function Settings() {
                                 </ul>
                             </div>
                         </div>
+                    </div>
+                )}
+
+                {activeTab === 'locations' && (
+                    <div className="locations-section">
+                        <LocationManager />
                     </div>
                 )}
 
