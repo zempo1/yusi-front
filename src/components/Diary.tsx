@@ -1,6 +1,6 @@
 import { Button, Textarea, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, Input } from './ui'
 import { toast } from 'sonner'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { writeDiary, editDiary, getDiaryList, generateAiResponse, type Diary as DiaryType } from '../lib'
 import { useNavigate } from 'react-router-dom'
 import { Sparkles, Lock, MessageCircle, Edit2, X, Settings, Unlock, Book, MapPin } from 'lucide-react'
@@ -23,6 +23,9 @@ export const Diary = () => {
   const [diaries, setDiaries] = useState<DiaryType[]>([])
   const [decryptedContents, setDecryptedContents] = useState<Record<string, string>>({})
   const [location, setLocation] = useState<GeoLocation | null>(null)
+  const [clusterMode, setClusterMode] = useState<'time' | 'location' | 'emotion'>('time')
+  const [timeRange, setTimeRange] = useState<'all' | '7d' | '30d' | '180d' | '1y'>('all')
+  const [selectedCluster, setSelectedCluster] = useState<string | null>(null)
   const userId = user?.userId || ''
 
   const { setIsOpen, setInitialMessage } = useChatStore()
@@ -166,7 +169,7 @@ export const Diary = () => {
       setDate(new Date().toISOString().split('T')[0])
       setLocation(null)
       loadDiaries()
-    } catch (e) {
+    } catch {
       toast.error('保存失败，请重试')
     } finally {
       setLoading(false)
@@ -209,8 +212,8 @@ export const Diary = () => {
       await generateAiResponse(diaryId)
       toast.success('AI回应生成中，请稍候刷新')
       setTimeout(loadDiaries, 3000)
-    } catch (e) {
-      // error handled
+    } catch {
+      toast.error('生成失败')
     } finally {
       setGenLoading(null)
     }
@@ -230,6 +233,137 @@ export const Diary = () => {
     }
     return decryptedContents[diary.diaryId] || '[🔒 内容已加密，请解锁查看]'
   }
+
+  useEffect(() => {
+    setSelectedCluster(null)
+  }, [clusterMode, timeRange])
+
+  const emotionConfig = useMemo(() => ({
+    Joy: { label: '喜悦', color: 'bg-amber-400', text: 'text-amber-600' },
+    Sadness: { label: '悲伤', color: 'bg-sky-400', text: 'text-sky-600' },
+    Anxiety: { label: '焦虑', color: 'bg-orange-400', text: 'text-orange-600' },
+    Love: { label: '温暖', color: 'bg-rose-400', text: 'text-rose-600' },
+    Anger: { label: '愤怒', color: 'bg-red-500', text: 'text-red-600' },
+    Fear: { label: '恐惧', color: 'bg-violet-400', text: 'text-violet-600' },
+    Hope: { label: '希望', color: 'bg-emerald-400', text: 'text-emerald-600' },
+    Calm: { label: '平静', color: 'bg-teal-400', text: 'text-teal-600' },
+    Confusion: { label: '困惑', color: 'bg-indigo-400', text: 'text-indigo-600' },
+    Neutral: { label: '随想', color: 'bg-slate-400', text: 'text-slate-500' }
+  }), [])
+
+  const emotionKeywords = useMemo(() => ({
+    Joy: ['开心', '快乐', '幸福', '喜悦', '满足', '兴奋', '甜', '好棒', '好开心'],
+    Sadness: ['难过', '悲伤', '失落', '想哭', '眼泪', '遗憾', '孤单', '沮丧'],
+    Anxiety: ['焦虑', '紧张', '担心', '不安', '压力', '恐慌', '崩溃', '急躁'],
+    Love: ['温暖', '爱', '喜欢', '感动', '亲密', '依恋', '拥抱', '陪伴'],
+    Anger: ['生气', '愤怒', '烦躁', '讨厌', '失望', '恼火', '憋屈', '怒'],
+    Fear: ['害怕', '恐惧', '不敢', '惊吓', '阴影', '惶恐'],
+    Hope: ['希望', '期待', '相信', '一定会', '转机', '未来', '愿望'],
+    Calm: ['平静', '安静', '放松', '舒缓', '安然', '淡定', '自在'],
+    Confusion: ['困惑', '迷茫', '不确定', '矛盾', '搞不懂', '疑惑'],
+    Neutral: []
+  }), [])
+
+  const inferEmotion = useCallback((text: string) => {
+    const contentText = text.trim()
+    if (!contentText) return 'Neutral' as const
+    const lower = contentText.toLowerCase()
+    let bestKey: keyof typeof emotionKeywords = 'Neutral'
+    let bestScore = 0
+    Object.entries(emotionKeywords).forEach(([key, words]) => {
+      const score = words.reduce((acc, word) => acc + (lower.includes(word.toLowerCase()) ? 1 : 0), 0)
+      if (score > bestScore) {
+        bestScore = score
+        bestKey = key as keyof typeof emotionKeywords
+      }
+    })
+    return bestScore === 0 ? 'Neutral' : bestKey
+  }, [emotionKeywords])
+
+  const footprintEntries = useMemo(() => {
+    return diaries
+      .filter((diary) => diary.latitude && diary.longitude)
+      .map((diary) => {
+        const rawContent = diary.clientEncrypted
+          ? decryptedContents[diary.diaryId] || ''
+          : diary.content
+        const emotion = inferEmotion(rawContent)
+        return {
+          id: diary.diaryId,
+          title: diary.title,
+          entryDate: diary.entryDate,
+          latitude: diary.latitude as number,
+          longitude: diary.longitude as number,
+          placeName: diary.placeName || diary.address || '未知地点',
+          address: diary.address,
+          emotion,
+          preview: rawContent.slice(0, 48)
+        }
+      })
+  }, [diaries, decryptedContents, inferEmotion])
+
+  const filteredEntries = useMemo(() => {
+    if (timeRange === 'all') return footprintEntries
+    const now = new Date()
+    const rangeMap = {
+      '7d': 7,
+      '30d': 30,
+      '180d': 180,
+      '1y': 365
+    }
+    const days = rangeMap[timeRange]
+    return footprintEntries.filter((entry) => {
+      const date = new Date(entry.entryDate)
+      if (Number.isNaN(date.getTime())) return false
+      const diff = (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+      return diff <= days
+    })
+  }, [footprintEntries, timeRange])
+
+  const clusters = useMemo(() => {
+    const map = new Map<string, typeof filteredEntries>()
+    filteredEntries.forEach((entry) => {
+      let key = ''
+      if (clusterMode === 'time') {
+        key = entry.entryDate.slice(0, 7)
+      } else if (clusterMode === 'location') {
+        key = entry.placeName
+      } else {
+        key = entry.emotion
+      }
+      if (!map.has(key)) {
+        map.set(key, [])
+      }
+      map.get(key)!.push(entry)
+    })
+    const list = Array.from(map.entries()).map(([key, items]) => ({ key, items }))
+    if (clusterMode === 'time') {
+      return list.sort((a, b) => b.key.localeCompare(a.key))
+    }
+    return list.sort((a, b) => b.items.length - a.items.length)
+  }, [filteredEntries, clusterMode])
+
+  const activeEntries = useMemo(() => {
+    if (!selectedCluster) return filteredEntries
+    return filteredEntries.filter((entry) => {
+      if (clusterMode === 'time') return entry.entryDate.startsWith(selectedCluster)
+      if (clusterMode === 'location') return entry.placeName === selectedCluster
+      return entry.emotion === selectedCluster
+    })
+  }, [filteredEntries, selectedCluster, clusterMode])
+
+  const mapBounds = useMemo(() => {
+    if (activeEntries.length === 0) {
+      return { minLat: 0, maxLat: 1, minLng: 0, maxLng: 1 }
+    }
+    const lats = activeEntries.map((p) => p.latitude)
+    const lngs = activeEntries.map((p) => p.longitude)
+    const minLat = Math.min(...lats)
+    const maxLat = Math.max(...lats)
+    const minLng = Math.min(...lngs)
+    const maxLng = Math.max(...lngs)
+    return { minLat, maxLat, minLng, maxLng }
+  }, [activeEntries])
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 px-4 py-8">
@@ -337,6 +471,152 @@ export const Diary = () => {
               </Button>
             </div>
           </CardFooter>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.05 }}
+      >
+        <Card className="glass-card border-white/20 dark:border-white/10 shadow-xl">
+          <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="space-y-2">
+              <CardTitle className="text-xl flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                足迹地图
+              </CardTitle>
+              <CardDescription>按时间、地点、情感聚类回看你的日记足迹。</CardDescription>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant={clusterMode === 'time' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setClusterMode('time')}
+              >
+                时间聚类
+              </Button>
+              <Button
+                variant={clusterMode === 'location' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setClusterMode('location')}
+              >
+                地点聚类
+              </Button>
+              <Button
+                variant={clusterMode === 'emotion' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setClusterMode('emotion')}
+              >
+                情感聚类
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
+            <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/5 via-background to-background min-h-[360px]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(139,92,246,0.15),transparent_45%),radial-gradient(circle_at_80%_70%,rgba(59,130,246,0.12),transparent_45%)]" />
+              <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 opacity-20">
+                {[...Array(24)].map((_, index) => (
+                  <div key={index} className="border border-white/10 dark:border-white/5" />
+                ))}
+              </div>
+              {activeEntries.length === 0 ? (
+                <div className="relative z-10 h-full flex flex-col items-center justify-center text-muted-foreground gap-3">
+                  <MapPin className="w-10 h-10 opacity-40" />
+                  <div className="text-sm">暂无足迹，添加带位置的日记开始点亮地图</div>
+                </div>
+              ) : (
+                <div className="relative z-10 h-full">
+                  {activeEntries.map((entry) => {
+                    const latSpan = Math.max(mapBounds.maxLat - mapBounds.minLat, 0.0001)
+                    const lngSpan = Math.max(mapBounds.maxLng - mapBounds.minLng, 0.0001)
+                    const x = ((entry.longitude - mapBounds.minLng) / lngSpan) * 100
+                    const y = (1 - (entry.latitude - mapBounds.minLat) / latSpan) * 100
+                    const emotion = emotionConfig[entry.emotion]
+                    return (
+                      <button
+                        key={entry.id}
+                        className="group absolute flex items-center justify-center"
+                        style={{ left: `${x}%`, top: `${y}%` }}
+                        onClick={() => setSelectedCluster(clusterMode === 'emotion' ? entry.emotion : clusterMode === 'location' ? entry.placeName : entry.entryDate.slice(0, 7))}
+                        title={`${entry.entryDate} · ${entry.placeName}`}
+                      >
+                        <span className={`absolute w-6 h-6 rounded-full ${emotion.color} opacity-20 blur-sm`} />
+                        <span className={`w-3 h-3 rounded-full ${emotion.color} shadow-lg ring-2 ring-white/70 dark:ring-white/20 transition-transform duration-200 group-hover:scale-125`} />
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: 'all', label: '全部' },
+                  { key: '7d', label: '近7天' },
+                  { key: '30d', label: '近30天' },
+                  { key: '180d', label: '近半年' },
+                  { key: '1y', label: '近一年' }
+                ].map((item) => (
+                  <Button
+                    key={item.key}
+                    variant={timeRange === item.key ? 'secondary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setTimeRange(item.key as typeof timeRange)}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+              </div>
+
+              <div className="rounded-2xl border border-border/60 bg-background/60 backdrop-blur p-4 space-y-3">
+                <div className="flex items-center justify-between text-sm font-medium">
+                  <span>聚类结果</span>
+                  <span className="text-muted-foreground">{clusters.length} 组</span>
+                </div>
+                <div className="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                  {clusters.map((cluster) => {
+                    const isActive = selectedCluster === cluster.key
+                    const first = cluster.items[0]
+                    const emotion = emotionConfig[first.emotion]
+                    return (
+                      <button
+                        key={cluster.key}
+                        onClick={() => setSelectedCluster(cluster.key)}
+                        className={`w-full text-left p-3 rounded-xl border transition-all ${isActive ? 'border-primary/40 bg-primary/5' : 'border-border/40 hover:bg-muted/30'}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            {clusterMode === 'emotion'
+                              ? emotionConfig[cluster.key as keyof typeof emotionConfig]?.label || cluster.key
+                              : cluster.key}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{cluster.items.length} 条</span>
+                        </div>
+                        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className={`w-2 h-2 rounded-full ${emotion.color}`} />
+                          <span className="truncate">{first.title}</span>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 space-y-2 text-sm">
+                <div className="font-medium">情感图例</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(emotionConfig).map(([key, config]) => (
+                    <div key={key} className="flex items-center gap-2 text-muted-foreground">
+                      <span className={`w-2.5 h-2.5 rounded-full ${config.color}`} />
+                      <span>{config.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </motion.div>
 

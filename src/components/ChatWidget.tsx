@@ -30,7 +30,7 @@ export const ChatWidget = () => {
       setInput(initialMessage)
       setInitialMessage('')
     }
-  }, [isOpen, initialMessage])
+  }, [isOpen, initialMessage, setInitialMessage])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -136,12 +136,13 @@ export const ChatWidget = () => {
           }
         }
       }
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
         toast.info('响应已停止')
       } else {
+        const message = error instanceof Error ? error.message : ''
         console.error('Chat error:', error)
-        toast.error(error.message || '获取响应失败')
+        toast.error(message || '获取响应失败')
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === aiMsgId

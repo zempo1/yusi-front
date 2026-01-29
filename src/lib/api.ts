@@ -23,7 +23,7 @@ export const ErrorCode = {
 
 export type ErrorCode = typeof ErrorCode[keyof typeof ErrorCode];
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   code: number;
   info: string;
   data: T;

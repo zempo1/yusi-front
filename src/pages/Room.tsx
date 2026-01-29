@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { RoomSubmit, RoomReport, RoomChat } from '../components/room'
 import { getReport, getRoom, cancelRoom, startRoom, voteCancelRoom, getScenarios } from '../lib'
 import { useRoomStore } from '../stores'
@@ -21,12 +21,12 @@ export const Room = () => {
   } | null>(null)
   const [scenarios, setScenarios] = useState<Scenario[]>([])
   const userId = localStorage.getItem('yusi-user-id') || ''
-  const timerRef = useRef<any>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [starting, setStarting] = useState(false)
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>('')
   const [randomPool, setRandomPool] = useState<string[]>([])
 
-  const fetchRoom = async () => {
+  const fetchRoom = useCallback(async () => {
     if (!code) return
     try {
       const data = await getRoom(code)
@@ -34,7 +34,7 @@ export const Room = () => {
     } catch (e) {
       console.error(e)
     }
-  }
+  }, [code, setRoom])
 
   useEffect(() => {
     getScenarios().then((data) => {
@@ -55,7 +55,7 @@ export const Room = () => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [code, room?.status, report])
+  }, [code, room?.status, report, fetchRoom])
 
   useEffect(() => {
     if (!code) return
@@ -66,7 +66,7 @@ export const Room = () => {
         publicSubmissions: r.publicSubmissions
       }))
     }
-  }, [code, room?.status])
+  }, [code, room?.status, report])
 
   const handleCancel = async () => {
     if (!code || !userId) return
@@ -76,8 +76,8 @@ export const Room = () => {
       await cancelRoom(code, userId)
       toast.success('房间已解散')
       window.location.href = '/'
-    } catch (e) {
-      // handled
+    } catch {
+      toast.error('解散失败')
     }
   }
 
@@ -88,8 +88,8 @@ export const Room = () => {
       await voteCancelRoom(code, userId)
       toast.success('已投票')
       fetchRoom()
-    } catch (e) {
-      // handled
+    } catch {
+      toast.error('投票失败')
     }
   }
 
@@ -119,8 +119,8 @@ export const Room = () => {
       await startRoom({ code, scenarioId: finalId, ownerId: userId })
       toast.success('房间已开始')
       fetchRoom()
-    } catch (e) {
-      // handled
+    } catch {
+      toast.error('启动失败')
     } finally {
       setStarting(false)
     }

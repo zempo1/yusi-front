@@ -22,8 +22,8 @@ export const RoomSubmit = ({ code, userId }: { code: string; userId: string }) =
       await submitNarrative({ code, userId, narrative, isPublic })
       toast.success('提交成功')
       window.location.reload()
-    } catch (e) {
-      // error handled by interceptor
+    } catch {
+      toast.error('提交失败')
     } finally {
       setLoading(false)
     }

@@ -19,8 +19,8 @@ export const RoomCreate = () => {
       const room = await createRoom({ ownerId, maxMembers })
       toast.success(`房间创建成功，邀请码：${room.code}`)
       navigate(`/room/${room.code}`)
-    } catch (e) {
-      // error handled by interceptor
+    } catch {
+      toast.error('创建失败')
     } finally {
       setLoading(false)
     }

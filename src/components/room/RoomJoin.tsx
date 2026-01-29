@@ -23,8 +23,8 @@ export const RoomJoin = () => {
       await joinRoom({ code: code.toUpperCase(), userId })
       toast.success('加入成功')
       navigate(`/room/${code.toUpperCase()}`)
-    } catch (e) {
-      // error handled by interceptor
+    } catch {
+      toast.error('加入失败')
     } finally {
       setLoading(false)
     }

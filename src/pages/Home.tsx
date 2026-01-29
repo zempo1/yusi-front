@@ -2,7 +2,7 @@ import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/ui'
 import { Sparkles, Heart, MessageCircle, Users, ArrowRight, Zap } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState, useId } from 'react'
 import { getPlatformStats, type PlatformStats } from '../lib/stats'
 
 // 动态数字动画组件
@@ -25,27 +25,48 @@ const AnimatedCounter = ({ value, suffix = '' }: { value: number; suffix?: strin
 
 // 漂浮粒子背景
 const FloatingParticles = () => {
+  const seed = useId()
+  const particles = useMemo(() => {
+    let value = 0
+    for (let i = 0; i < seed.length; i++) {
+      value = (value * 31 + seed.charCodeAt(i)) >>> 0
+    }
+    const next = () => {
+      value = (value * 1664525 + 1013904223) >>> 0
+      return value / 4294967296
+    }
+    return [...Array(20)].map((_, index) => ({
+      id: index,
+      left: next() * 100,
+      top: next() * 100,
+      xOffset: next() * 20 - 10,
+      duration: 3 + next() * 2,
+      delay: next() * 2,
+      intensity: index % 3 === 0 ? 0.6 : 0.4,
+    }))
+  }, [seed])
+
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {[...Array(20)].map((_, i) => (
+      {particles.map((particle) => (
         <motion.div
-          key={i}
+          key={particle.id}
           className="absolute w-2 h-2 rounded-full"
           style={{
-            background: `radial-gradient(circle, hsl(var(--primary) / ${i % 3 === 0 ? '0.6' : '0.4'}), transparent)`,
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            background: `radial-gradient(circle, hsl(var(--primary) / ${particle.intensity}), transparent)`,
+            left: `${particle.left}%`,
+            top: `${particle.top}%`,
           }}
           animate={{
             y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
+            x: [0, particle.xOffset, 0],
             opacity: [0.3, 0.8, 0.3],
             scale: [1, 1.5, 1],
           }}
           transition={{
-            duration: 3 + Math.random() * 2,
+            duration: particle.duration,
             repeat: Infinity,
-            delay: Math.random() * 2,
+            delay: particle.delay,
           }}
         />
       ))}

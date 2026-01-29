@@ -23,8 +23,8 @@ export const ScenarioSubmit = () => {
       toast.success('投稿成功，等待审核')
       setTitle('')
       setDescription('')
-    } catch (e) {
-      // error handled by interceptor
+    } catch {
+      toast.error('提交失败')
     } finally {
       setLoading(false)
     }

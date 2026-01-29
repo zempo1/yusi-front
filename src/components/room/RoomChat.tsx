@@ -110,8 +110,8 @@ export const RoomChat = ({ roomCode, roomStatus, memberNames = {} }: RoomChatPro
             lastMessageTimeRef.current = newMessage.createdAt
             setInput('')
             scrollToBottom()
-        } catch (e: any) {
-            toast.error(e.response?.data?.message || '发送失败')
+        } catch {
+            toast.error('发送失败')
         } finally {
             setSending(false)
         }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, User, Check, CheckCheck } from 'lucide-react'
 import { Button, Input } from './ui'
@@ -34,7 +34,7 @@ export const SoulChatWindow = ({ isOpen, onClose, matchId, partnerName = '灵魂
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     if (!matchId) return
     try {
       const res = await soulChatApi.getHistory(matchId)
@@ -44,7 +44,7 @@ export const SoulChatWindow = ({ isOpen, onClose, matchId, partnerName = '灵魂
     } catch (e) {
       console.error(e)
     }
-  }
+  }, [matchId])
 
   useEffect(() => {
     if (isOpen && matchId) {
@@ -65,7 +65,7 @@ export const SoulChatWindow = ({ isOpen, onClose, matchId, partnerName = '灵魂
         clearInterval(pollIntervalRef.current)
       }
     }
-  }, [isOpen, matchId])
+  }, [isOpen, matchId, fetchHistory])
 
   useEffect(() => {
     scrollToBottom()

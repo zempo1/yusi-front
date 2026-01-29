@@ -140,7 +140,7 @@ export const LocationManager = () => {
             }
             resetForm()
             loadLocations()
-        } catch (e) {
+        } catch {
             toast.error('保存失败')
         } finally {
             setSaving(false)
