@@ -172,8 +172,9 @@ docker-compose build
 
 ### 运行容器
 ```bash
-# 设置高德地图 JS API Key
-export AMAP_JS_KEY=your_amap_js_key
+# 设置高德地图配置
+export AMAP_JS_KEY=your_amap_js_key           # JS API Key
+export AMAP_SECURITY_CODE=your_security_code  # 安全密钥
 
 # 启动
 docker-compose up -d
@@ -181,17 +182,32 @@ docker-compose up -d
 
 或通过 `.env` 文件：
 ```bash
-echo "AMAP_JS_KEY=your_key" > .env
+cat > .env << EOF
+AMAP_JS_KEY=your_js_key
+AMAP_SECURITY_CODE=your_security_code
+EOF
 docker-compose up -d
 ```
+
+### 高德地图安全配置说明
+
+本项目采用**高德官方推荐的安全代理方式**：
+
+1. **AMAP_JS_KEY**: JS API Key，用于加载地图 SDK
+2. **AMAP_SECURITY_CODE**: 安全密钥，通过 Nginx 代理附加到请求中，不暴露在前端
+
+Nginx 会在 `/_AMapService/` 路径下自动将安全密钥附加到请求参数中，前端代码只需配置 `serviceHost` 即可。
+
+参考文档: https://lbs.amap.com/api/javascript-api-v2/guide/abc/jscode
 
 ### 文件说明
 | 文件 | 说明 |
 |------|------|
 | `Dockerfile` | 多阶段构建，生产环境用 Nginx |
 | `docker-compose.yml` | 容器编排，支持环境变量注入 |
-| `nginx.conf` | Nginx 配置，代理 `/api` 到后端 |
-| `entrypoint.sh` | 运行时注入 `AMAP_JS_KEY` 到 JS 文件 |
+| `nginx.conf` | Nginx 配置，包含高德安全代理 |
+| `entrypoint.sh` | 运行时注入环境变量到 JS 和 Nginx |
+
 
 ## 🤝 Contributing
 

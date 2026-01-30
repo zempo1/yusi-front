@@ -11,17 +11,26 @@ import '../styles/footprint-map.css'
 declare global {
     interface Window {
         AMap: any
-        _AMapSecurityConfig: { securityJsCode: string }
+        _AMapSecurityConfig: {
+            securityJsCode?: string
+            serviceHost?: string
+        }
         _initAMap?: () => void
     }
 }
 
-// 加载高德地图 SDK
+// 加载高德地图 SDK（使用安全代理方式）
 const loadAMapSDK = (): Promise<any> => {
     return new Promise((resolve, reject) => {
         if (window.AMap) {
             resolve(window.AMap)
             return
+        }
+
+        // 配置安全代理（推荐方式，不暴露安全密钥）
+        // Nginx 会在 /_AMapService/ 路径下自动附加 jscode 参数
+        window._AMapSecurityConfig = {
+            serviceHost: '/_AMapService'
         }
 
         const script = document.createElement('script')
@@ -32,7 +41,7 @@ const loadAMapSDK = (): Promise<any> => {
 
         window._initAMap = () => {
             resolve(window.AMap)
-            delete (window as any)._initAMap
+            delete window._initAMap
         }
 
         script.onerror = () => reject(new Error('Failed to load AMap SDK'))

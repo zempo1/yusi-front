@@ -18,15 +18,20 @@ RUN npm run build
 # --- 第二阶段：生产阶段 ---
 FROM nginx:stable-alpine as production-stage
 
+# 安装 envsubst (用于 nginx 配置模板替换)
+RUN apk add --no-cache gettext
+
 # 复制构建产物
 COPY --from=build-stage /app/dist /usr/share/nginx/html
+
+# 复制 nginx 配置模板
+COPY nginx.conf /etc/nginx/nginx.conf.template
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# 复制 entrypoint 脚本用于运行时注入环境变量
+# 复制 entrypoint 脚本
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 8080
 
-# 使用 entrypoint 而非直接启动 nginx
 ENTRYPOINT ["/entrypoint.sh"]

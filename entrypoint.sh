@@ -1,15 +1,31 @@
 #!/bin/sh
 set -e
 
-# 替换 JS 文件中的占位符为实际环境变量值
-# AMAP_JS_KEY: 高德地图 JS API Key
+# ========== 高德地图配置 ==========
+# AMAP_JS_KEY: JS API Key (用于加载地图SDK)
+# AMAP_SECURITY_CODE: 安全密钥 (用于代理转发)
 
+# 1. 注入 JS API Key 到前端代码
 if [ -n "$AMAP_JS_KEY" ]; then
     echo "Injecting AMAP_JS_KEY into frontend assets..."
     find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s/__AMAP_JS_KEY__/${AMAP_JS_KEY}/g" {} \;
     echo "Done."
 else
     echo "Warning: AMAP_JS_KEY not set, map features may not work."
+fi
+
+# 2. 注入安全密钥到前端代码 (用于 serviceHost 配置)
+if [ -n "$AMAP_SECURITY_CODE" ]; then
+    echo "Injecting AMAP_SECURITY_CODE into frontend assets..."
+    find /usr/share/nginx/html/assets -type f -name "*.js" -exec sed -i "s/__AMAP_SECURITY_CODE__/${AMAP_SECURITY_CODE}/g" {} \;
+    echo "Done."
+fi
+
+# 3. 生成 nginx 配置 (替换环境变量)
+if [ -n "$AMAP_SECURITY_CODE" ]; then
+    echo "Configuring Nginx with AMAP security proxy..."
+    envsubst '${AMAP_SECURITY_CODE}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+    echo "Done."
 fi
 
 # 启动 nginx
