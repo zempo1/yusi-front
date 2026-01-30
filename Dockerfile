@@ -7,7 +7,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # 增加 --ignore-scripts 参数避免 husky 报错
-RUN npm install --ignore-scripts
+ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts
 
 # 复制源代码
 COPY . .
@@ -19,7 +22,7 @@ RUN npm run build
 FROM nginx:stable-alpine as production-stage
 
 # 安装 envsubst (用于 nginx 配置模板替换)
-RUN apk add --no-cache gettext
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && apk add --no-cache gettext
 
 # 复制构建产物
 COPY --from=build-stage /app/dist /usr/share/nginx/html
