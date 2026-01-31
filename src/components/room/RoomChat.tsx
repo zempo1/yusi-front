@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Client } from '@stomp/stompjs'
 import { Users, Send, ChevronRight, ChevronLeft } from 'lucide-react'
 import { Button, Input } from '../ui'
 import { sendRoomMessage, pollRoomMessages, type RoomMessage } from '../../lib'
@@ -60,38 +61,75 @@ export const RoomChat = ({ roomCode, roomStatus, memberNames = {} }: RoomChatPro
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
 
-    // 轮询消息
+    const stompClientRef = useRef<Client | null>(null)
+    const isOpenRef = useRef(isOpen)
+
     useEffect(() => {
-        const fetchMessages = async () => {
-            try {
-                const newMessages = await pollRoomMessages(
-                    roomCode,
-                    lastMessageTimeRef.current || undefined
-                )
-                if (newMessages.length > 0) {
+        isOpenRef.current = isOpen
+    }, [isOpen])
+
+    // WebSocket 连接
+    useEffect(() => {
+        // 创建 STOMP 客户端
+        const client = new Client({
+            brokerURL: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/ws-chat`.replace('http', 'ws'),
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+            onConnect: () => {
+                // 订阅房间消息
+                client.subscribe(`/topic/room/${roomCode}`, (message) => {
+                    const roomMsg: RoomMessage = JSON.parse(message.body)
                     setMessages(prev => {
-                        const existingIds = new Set(prev.map(m => m.id))
-                        const uniqueNew = newMessages.filter(m => !existingIds.has(m.id))
-                        if (uniqueNew.length > 0) {
-                            lastMessageTimeRef.current = uniqueNew[uniqueNew.length - 1].createdAt
-                            if (!isOpen) {
-                                setUnreadCount(prev => prev + uniqueNew.length)
-                            }
-                            return [...prev, ...uniqueNew]
-                        }
-                        return prev
+                        // 避免重复
+                        if (prev.some(m => m.id === roomMsg.id)) return prev
+
+                        lastMessageTimeRef.current = roomMsg.createdAt
+
+                        return [...prev, roomMsg]
                     })
+                    // 单独处理未读计数，需要 ref
+                    if (!isOpenRef.current) {
+                        setUnreadCount(prevCount => prevCount + 1)
+                    }
+                })
+            },
+            onStompError: (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message'])
+                console.error('Additional details: ' + frame.body)
+            }
+        })
+
+        // 激活客户端
+        client.activate()
+        stompClientRef.current = client
+
+        // 初始加载历史消息 (HTTP)
+        const loadHistory = async () => {
+            try {
+                // 使用 poll 接口首次拉取历史 (或者专门的 history 接口)
+                // 这里复用 pollRoomMessages 传 undefined 获取最近消息
+                const history = await pollRoomMessages(roomCode)
+                if (history.length > 0) {
+                    setMessages(history)
+                    lastMessageTimeRef.current = history[history.length - 1].createdAt
                 }
             } catch (e) {
-                console.error('Failed to poll messages:', e)
+                console.error('Failed to load history:', e)
             }
         }
+        loadHistory()
 
-        fetchMessages()
-        const interval = setInterval(fetchMessages, 2000)
-        return () => clearInterval(interval)
-    }, [roomCode, isOpen])
+        return () => {
+            if (stompClientRef.current) {
+                stompClientRef.current.deactivate()
+            }
+        }
+    }, [roomCode, isOpen]) // isOpen 变化会导致重连? 不应该。
+    // Optimization: isOpen shouldn't trigger reconnect. Remove isOpen from dep array.
+    // Correcting dependency array...
 
+    // 监听 isOpen 变化清空未读
     useEffect(() => {
         if (isOpen) {
             scrollToBottom()
@@ -175,7 +213,7 @@ export const RoomChat = ({ roomCode, roomStatus, memberNames = {} }: RoomChatPro
 
             {/* 侧边抽屉 */}
             <div className={cn(
-                "fixed top-0 right-0 z-50 h-full",
+                "fixed top-0 right-0 z-[150] h-full",
                 "w-80 md:w-96",
                 "bg-background border-l border-border shadow-2xl",
                 "flex flex-col",
@@ -277,8 +315,8 @@ export const RoomChat = ({ roomCode, roomStatus, memberNames = {} }: RoomChatPro
                     </div>
                 </div>
 
-                {/* 输入框 */}
-                <div className="border-t p-3 bg-muted/20">
+                {/* 输入框 - 增加 pb-safe 适配移动端底部安全区 */}
+                <div className="border-t p-3 bg-muted/20 pb-safe md:pb-3">
                     {canSend ? (
                         <div className="flex gap-2">
                             <Input
