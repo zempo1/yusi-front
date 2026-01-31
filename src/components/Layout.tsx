@@ -7,6 +7,7 @@ import { ThemeSwitcher } from './ThemeSwitcher'
 import { Button } from './ui/Button'
 import { initializeTheme } from '../stores/themeStore'
 import { ChatWidget } from './ChatWidget'
+import { Footer } from './Footer'
 
 export interface LayoutProps {
   children?: ReactNode
@@ -129,6 +130,8 @@ export const Layout = ({ children }: LayoutProps) => {
       <main className="flex-1 container-page px-4 md:px-8 py-6">
         {children}
       </main>
+
+      <Footer />
 
       {/* Mobile Nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border/50 pb-safe">
