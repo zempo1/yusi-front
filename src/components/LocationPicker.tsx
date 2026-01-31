@@ -228,7 +228,7 @@ export const LocationPicker = ({ value, onChange, className = '' }: LocationPick
 
             {/* Expanded Panel */}
             {isExpanded && !value && (
-                <Card className="absolute z-50 top-full mt-2 left-0 right-0 p-4 shadow-xl border bg-background max-h-[400px] overflow-hidden flex flex-col">
+                <Card className="absolute z-[9999] top-full mt-2 left-0 right-0 p-4 shadow-xl border bg-background max-h-[400px] overflow-hidden flex flex-col">
                     <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
                         {/* Search Input */}
                         <div className="relative">

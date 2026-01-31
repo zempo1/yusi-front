@@ -111,29 +111,32 @@ export const Match = () => {
 
   return (
     <>
-      <div className="container-page py-12 max-w-4xl min-h-screen flex flex-col items-center">
-        <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-          <div>
+      <div className="container-page py-12 min-h-screen flex flex-col items-center">
+        <div className="w-full grid gap-4 mb-10 items-center text-center md:grid-cols-[1fr_auto_1fr]">
+          <div className="flex flex-col items-center justify-center md:col-start-2">
             <h1 className="text-4xl font-bold tracking-tight mb-2 text-gradient">灵魂匹配</h1>
             <p className="text-muted-foreground text-lg">
               基于 AI 深度分析，为你寻找真正懂你的灵魂伴侣。
             </p>
           </div>
           {user.isMatchEnabled && (
-            <Button variant="outline" size="sm" onClick={() => setIsEnabled(false)} className="self-start md:self-center">
-              <Settings className="mr-2 h-4 w-4" />
-              设置
-            </Button>
+            <div className="flex justify-center md:justify-self-end md:col-start-3">
+              <Button variant="outline" size="sm" onClick={() => setIsEnabled(false)}>
+                <Settings className="mr-2 h-4 w-4" />
+                设置
+              </Button>
+            </div>
           )}
         </div>
 
         {!user.isMatchEnabled && !isEnabled ? (
           <motion.div
+            className="w-full flex justify-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <Card className="p-10 max-w-lg mx-auto text-center space-y-8 glass-card border-primary/20">
-                <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center shadow-inner">
+                <div className="mx-auto w-20 h-20 bg-linear-to-br from-primary/20 to-purple-500/20 rounded-full flex items-center justify-center shadow-inner">
                 <Sparkles className="h-10 w-10 text-primary" />
                 </div>
                 <div>

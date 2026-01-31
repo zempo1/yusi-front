@@ -76,24 +76,36 @@ export const editDiary = async (req: EditDiaryRequest): Promise<void> => {
   await api.put('/diary', req)
 }
 
-export const getDiaryList = async (userId: string, pageNum = 1, pageSize = 10): Promise<Diary[]> => {
+export interface PagedResponse<T> {
+  content: T[]
+  totalPages: number
+  totalElements: number
+  size: number
+  number: number
+}
+
+export const getDiaryList = async (userId: string, pageNum = 1, pageSize = 10): Promise<PagedResponse<Diary>> => {
   const { data } = await api.get(`/diary/list`, {
     params: { userId, pageNum, pageSize }
   })
 
   // Handle Spring HATEOAS structure
   const pagedModel = data.data as PagedModel<Diary>
+  let content: Diary[] = []
 
   if (pagedModel._embedded?.diaryList) {
-    return pagedModel._embedded.diaryList
+    content = pagedModel._embedded.diaryList
+  } else if (pagedModel.content) {
+    content = pagedModel.content
   }
 
-  // Fallback for standard PageImpl serialization
-  if (pagedModel.content) {
-    return pagedModel.content
+  return {
+    content,
+    totalPages: pagedModel.page?.totalPages || 0,
+    totalElements: pagedModel.page?.totalElements || 0,
+    size: pagedModel.page?.size || pageSize,
+    number: pagedModel.page?.number || 0
   }
-
-  return []
 }
 
 export const generateAiResponse = async (diaryId: string): Promise<void> => {

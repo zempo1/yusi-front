@@ -21,6 +21,9 @@ export const Diary = () => {
   const [genLoading, setGenLoading] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [diaries, setDiaries] = useState<DiaryType[]>([])
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [loadingList, setLoadingList] = useState(false)
   const [decryptedContents, setDecryptedContents] = useState<Record<string, string>>({})
   const [location, setLocation] = useState<GeoLocation | null>(null)
   const [clusterMode, setClusterMode] = useState<'time' | 'location' | 'emotion'>('time')
@@ -66,30 +69,56 @@ export const Diary = () => {
   }, [cryptoKey, decrypt])
 
   // Load and decrypt diaries
-  const loadDiaries = useCallback(async () => {
+  const loadDiaries = useCallback(async (targetPage = 1) => {
     if (!userId) return
+    setLoadingList(true)
+    
     try {
-      const list = await getDiaryList(userId)
-      setDiaries(list)
+      // 5 items per page, default sort by createTime desc (from backend)
+      const response = await getDiaryList(userId, targetPage, 5)
+      
+      setDiaries(response.content)
+      setTotalPages(response.totalPages)
+      setPage(targetPage)
 
       // Decrypt contents if we have an active key
       if (hasActiveKey()) {
         const decrypted: Record<string, string> = {}
-        for (const diary of list) {
+        for (const diary of response.content) {
           decrypted[diary.diaryId] = await decryptDiary(diary)
         }
-        setDecryptedContents(decrypted)
+        setDecryptedContents(prev => ({ ...prev, ...decrypted }))
       }
     } catch (e) {
       console.error('Failed to load diaries', e)
+    } finally {
+      setLoadingList(false)
     }
   }, [userId, hasActiveKey, decryptDiary])
 
   useEffect(() => {
     if (encryptionInitialized) {
-      loadDiaries()
+      loadDiaries(1)
     }
-  }, [encryptionInitialized, loadDiaries])
+  }, [encryptionInitialized]) // Removed loadDiaries dependency to avoid loop
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== page) {
+      loadDiaries(newPage)
+      // Scroll to top of history section
+      const historySection = document.getElementById('history-section')
+      if (historySection) {
+        historySection.scrollIntoView({ behavior: 'smooth' })
+      }
+    }
+  }
+
+  // Effect to trigger load when page changes (but not on reset/initial load which is handled above)
+  // useEffect(() => {
+  //   if (page > 1) {
+  //     loadDiaries(false)
+  //   }
+  // }, [page]) // Removed loadDiaries dependency
 
   // Re-decrypt when key becomes available
   useEffect(() => {
@@ -168,7 +197,7 @@ export const Diary = () => {
       setContent('')
       setDate(new Date().toISOString().split('T')[0])
       setLocation(null)
-      loadDiaries()
+      loadDiaries(1)
     } catch {
       toast.error('保存失败，请重试')
     } finally {
@@ -211,7 +240,7 @@ export const Diary = () => {
     try {
       await generateAiResponse(diaryId)
       toast.success('AI回应生成中，请稍候刷新')
-      setTimeout(loadDiaries, 3000)
+      setTimeout(() => loadDiaries(page), 3000)
     } catch {
       toast.error('生成失败')
     } finally {
@@ -412,6 +441,7 @@ export const Diary = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="relative z-20"
       >
         <Card className="glass-card border-white/20 dark:border-white/10 shadow-xl">
           <CardHeader>
@@ -478,6 +508,7 @@ export const Diary = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.05 }}
+        className="relative z-10"
       >
         <Card className="glass-card border-white/20 dark:border-white/10 shadow-xl">
           <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -620,7 +651,7 @@ export const Diary = () => {
         </Card>
       </motion.div>
 
-      <div className="space-y-6">
+      <div className="space-y-6" id="history-section">
         <h3 className="text-xl font-semibold px-2 border-l-4 border-primary/50 pl-4">历史日记</h3>
 
         {diaries.length === 0 ? (
@@ -707,6 +738,55 @@ export const Diary = () => {
                 </Card>
               </motion.div>
             ))}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 pt-4 pb-8">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handlePageChange(page - 1)}
+                  disabled={page === 1 || loadingList}
+                  className="w-9 h-9 p-0"
+                >
+                  &lt;
+                </Button>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum = i + 1;
+                  if (totalPages > 5) {
+                    if (page > 3 && page < totalPages - 2) {
+                      pageNum = page - 2 + i;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    }
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={loadingList}
+                      className={`w-9 h-9 p-0 ${page === pageNum ? 'bg-primary text-primary-foreground shadow-md' : 'hover:bg-accent'}`}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handlePageChange(page + 1)}
+                  disabled={page === totalPages || loadingList}
+                  className="w-9 h-9 p-0"
+                >
+                  &gt;
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -35,7 +35,8 @@ const loadAMapSDK = (): Promise<any> => {
 
         const script = document.createElement('script')
         // 使用占位符，部署时由 entrypoint.sh 替换为实际 key
-        const amapKey = '__AMAP_JS_KEY__'
+        // 开发环境优先读取 VITE_AMAP_JS_KEY
+        const amapKey = import.meta.env.VITE_AMAP_JS_KEY || '__AMAP_JS_KEY__'
         script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapKey}&callback=_initAMap`
         script.async = true
 
