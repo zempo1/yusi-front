@@ -40,7 +40,7 @@ export const Layout = ({ children }: LayoutProps) => {
         <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-purple-500/10 blur-[100px]" />
       </div>
 
-      <header className="sticky top-0 z-[100] w-full border-b border-border/40 bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-[100] w-full border-b border-border/40 bg-background/80 backdrop-blur-xl transition-colors duration-300">
         <div className="container-page flex h-16 items-center justify-between px-4 md:px-8">
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center space-x-2 group relative">
@@ -134,7 +134,7 @@ export const Layout = ({ children }: LayoutProps) => {
       <Footer />
 
       {/* Mobile Nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border/50 pb-safe">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border/50 pb-safe transition-colors duration-300">
         <nav className="flex justify-around items-center h-16">
           {navItems.map((item) => {
             const isActive = pathname === item.href
