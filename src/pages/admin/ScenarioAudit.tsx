@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { adminApi, type Scenario } from "../../lib/api";
 import { Button } from "../../components/ui/Button";
+import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
+import { InputDialog } from "../../components/ui/InputDialog";
 import { toast } from "sonner";
 import { Loader2, Check, X, AlertCircle } from "lucide-react";
 
@@ -10,6 +12,11 @@ export const ScenarioAudit = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [loading, setLoading] = useState(false);
     const [processing, setProcessing] = useState<string | null>(null);
+
+    // Dialog states
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [rejectOpen, setRejectOpen] = useState(false);
+    const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
 
     const loadScenarios = async () => {
         setLoading(true);
@@ -32,20 +39,33 @@ export const ScenarioAudit = () => {
         loadScenarios();
     }, [page]);
 
-    const handleAudit = async (scenarioId: string, approved: boolean) => {
-        let rejectReason = "";
-        if (!approved) {
-            const reason = prompt("请输入拒绝理由:");
-            if (reason === null) return; // Cancelled
-            if (!reason.trim()) {
-                toast.error("拒绝理由不能为空");
-                return;
-            }
-            rejectReason = reason;
-        } else {
-            if (!confirm("确定要通过该场景吗？")) return;
-        }
+    const onApproveClick = (id: string) => {
+        setSelectedScenario(id);
+        setConfirmOpen(true);
+    };
 
+    const onRejectClick = (id: string) => {
+        setSelectedScenario(id);
+        setRejectOpen(true);
+    };
+
+    const handleApproveConfirm = async () => {
+        if (!selectedScenario) return;
+        setConfirmOpen(false);
+        await performAudit(selectedScenario, true);
+    };
+
+    const handleRejectConfirm = async (reason: string) => {
+        if (!selectedScenario) return;
+        if (!reason.trim()) {
+            toast.error("拒绝理由不能为空");
+            return;
+        }
+        setRejectOpen(false);
+        await performAudit(selectedScenario, false, reason);
+    };
+
+    const performAudit = async (scenarioId: string, approved: boolean, rejectReason: string = "") => {
         setProcessing(scenarioId);
         try {
             await adminApi.auditScenario(scenarioId, approved, rejectReason);
@@ -57,6 +77,7 @@ export const ScenarioAudit = () => {
             toast.error("操作失败");
         } finally {
             setProcessing(null);
+            setSelectedScenario(null);
         }
     };
 
@@ -107,7 +128,7 @@ export const ScenarioAudit = () => {
                                     <Button
                                         className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                                         disabled={processing === scenario.id}
-                                        onClick={() => handleAudit(scenario.id, true)}
+                                        onClick={() => onApproveClick(scenario.id)}
                                     >
                                         {processing === scenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
                                         通过
@@ -116,7 +137,7 @@ export const ScenarioAudit = () => {
                                         variant="danger"
                                         className="flex-1"
                                         disabled={processing === scenario.id}
-                                        onClick={() => handleAudit(scenario.id, false)}
+                                        onClick={() => onRejectClick(scenario.id)}
                                     >
                                         {processing === scenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4 mr-2" />}
                                         拒绝
@@ -149,6 +170,25 @@ export const ScenarioAudit = () => {
                     下一页
                 </Button>
             </div>
-        </div>
+
+            <ConfirmDialog
+                isOpen={confirmOpen}
+                title="确认通过"
+                description="确定通过该场景吗？通过后将对所有用户可见。"
+                onConfirm={handleApproveConfirm}
+                onCancel={() => setConfirmOpen(false)}
+            />
+
+            <InputDialog
+                isOpen={rejectOpen}
+                title="拒绝场景"
+                description="请输入拒绝理由，将反馈给用户。"
+                placeholder="例如：内容包含违规信息..."
+                inputType="textarea"
+                confirmText="确认拒绝"
+                onConfirm={handleRejectConfirm}
+                onCancel={() => setRejectOpen(false)}
+            />
+        </div >
     );
 };

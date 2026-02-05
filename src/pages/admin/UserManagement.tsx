@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { adminApi, type User } from "../../lib/api";
+import { useAuthStore } from "../../store/authStore";
 import { Button } from "../../components/ui/Button";
 import { toast } from "sonner";
 import { Search, Loader2 } from "lucide-react";
 
 export const UserManagement = () => {
+    const { user: currentUser } = useAuthStore();
     const [users, setUsers] = useState<User[]>([]);
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
@@ -119,8 +121,9 @@ export const UserManagement = () => {
                                             <Button
                                                 variant={user.permissionLevel >= 10 ? "danger" : "secondary"}
                                                 size="sm"
-                                                disabled={updating === user.userId}
+                                                disabled={updating === user.userId || currentUser?.userId === user.userId}
                                                 onClick={() => handlePermissionChange(user.userId, user.permissionLevel ?? 0)}
+                                                title={currentUser?.userId === user.userId ? "不能修改自己的权限" : ""}
                                             >
                                                 {updating === user.userId && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                                                 {user.permissionLevel >= 10 ? '降级' : '设为管理员'}
@@ -144,7 +147,7 @@ export const UserManagement = () => {
                     上一页
                 </Button>
                 <div className="text-sm text-muted-foreground">
-                    第 {page + 1} 页 / 共 {Math.max(1, totalPages)} 页
+                    第 {page + 1} 页 / 共 {totalPages > 0 ? totalPages : 1} 页
                 </div>
                 <Button
                     variant="outline"
