@@ -35,7 +35,7 @@ export const Layout = ({ children }: LayoutProps) => {
       {/* Background Effect - Subtle and Theme Compatible */}
       <div className="fixed inset-0 z-[-1] pointer-events-none">
         <div className="absolute inset-0 bg-background" />
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] bg-[url('/noise.svg')] mix-blend-overlay" />
         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[100px]" />
         <div className="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-purple-500/10 blur-[100px]" />
       </div>
