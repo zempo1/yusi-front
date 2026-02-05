@@ -19,9 +19,12 @@ export const UserManagement = () => {
         try {
             const res = await adminApi.getUsers(page, 10, search);
             if (res.data.code === 200) {
-                const data = res.data.data;
+                const data = res.data.data as any; // Cast to any to handle potential snake_case
                 setUsers(data.content);
-                setTotalPages(data.totalPages);
+                // Support both standard Spring Data (totalPages) and snake_case variations
+                const total = data.totalPages ?? data.total_pages ?? data.page?.totalPages ?? 0;
+                setTotalPages(total);
+                console.log("Loaded users:", data);
             }
         } catch (error) {
             console.error(error);

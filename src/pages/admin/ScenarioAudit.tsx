@@ -23,9 +23,11 @@ export const ScenarioAudit = () => {
         try {
             const res = await adminApi.getPendingScenarios(page, 10);
             if (res.data.code === 200) {
-                const data = res.data.data;
+                const data = res.data.data as any;
                 setScenarios(data.content);
-                setTotalPages(data.totalPages);
+                const total = data.totalPages ?? data.total_pages ?? data.page?.totalPages ?? 0;
+                setTotalPages(total);
+                console.log("Loaded scenarios:", data);
             }
         } catch (error) {
             console.error(error);
