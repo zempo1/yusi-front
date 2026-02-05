@@ -13,6 +13,11 @@ import Settings from './pages/Settings'
 import FootprintMap from './pages/FootprintMap'
 
 import { Plaza } from './pages/Plaza'
+import { AdminLayout } from './components/admin/AdminLayout'
+import { AdminDashboard } from './pages/admin/AdminDashboard'
+import { UserManagement } from './pages/admin/UserManagement'
+import { ScenarioAudit } from './pages/admin/ScenarioAudit'
+import { AdminGuard } from './components/admin/AdminGuard'
 
 const router = createBrowserRouter([
   {
@@ -29,6 +34,15 @@ const router = createBrowserRouter([
       { path: '/footprints', element: <FootprintMap /> },
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
+    ]
+  },
+  {
+    path: '/admin',
+    element: <AdminGuard><AdminLayout /></AdminGuard>,
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: 'users', element: <UserManagement /> },
+      { path: 'scenarios', element: <ScenarioAudit /> }
     ]
   }
 ])

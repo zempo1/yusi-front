@@ -5,7 +5,7 @@ import { getReport, getRoom, cancelRoom, startRoom, voteCancelRoom, getScenarios
 import { useRoomStore } from '../stores'
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, ConfirmDialog } from '../components/ui'
 import { toast } from 'sonner'
-import type { PersonalSketch, PairCompatibility, Scenario } from '../lib'
+import type { PersonalSketch, PairCompatibility, RoomScenario } from '../lib'
 import { Play, Copy, Users, CheckCircle2, Clock, AlertCircle, Shuffle, CheckSquare, Square, Sparkles, Timer } from 'lucide-react'
 import * as Tabs from '@radix-ui/react-tabs'
 import { cn } from '../utils'
@@ -19,7 +19,7 @@ export const Room = () => {
     pairs: PairCompatibility[];
     publicSubmissions?: { userId: string; content: string }[];
   } | null>(null)
-  const [scenarios, setScenarios] = useState<Scenario[]>([])
+  const [scenarios, setScenarios] = useState<RoomScenario[]>([])
   const userId = localStorage.getItem('yusi-user-id') || ''
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [starting, setStarting] = useState(false)

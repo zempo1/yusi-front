@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useEncryptionStore } from '../stores/encryptionStore';
 import { useAuthStore } from '../store/authStore';
+import { authApi } from '../lib/api';
 import { LocationManager } from '../components/LocationManager';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { ArrowLeft, Lock, MapPin, User, Key, Shield, AlertTriangle, Check, X } from 'lucide-react';
+import { ArrowLeft, Lock, MapPin, User, Key, Shield, AlertTriangle, Check, X, Pencil, Save, Loader2 } from 'lucide-react';
 
 export default function Settings() {
     const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function Settings() {
 
     // Tabs
     const [activeTab, setActiveTab] = useState<'security' | 'locations' | 'account'>('security');
-    
+
     // Modals
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [showUnlockModal, setShowUnlockModal] = useState(false);
@@ -44,7 +45,7 @@ export default function Settings() {
         isOpen: false,
         title: '',
         description: '',
-        action: async () => {},
+        action: async () => { },
         variant: 'primary'
     });
 
@@ -98,7 +99,7 @@ export default function Settings() {
             toast.error('两次输入的密码不一致');
             return;
         }
-        
+
         setConfirmModal({
             isOpen: true,
             title: '确认切换模式',
@@ -190,11 +191,10 @@ export default function Settings() {
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
-                                activeTab === tab.id
-                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                                    : 'bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary border border-border/50'
-                            }`}
+                            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${activeTab === tab.id
+                                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                                : 'bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary border border-border/50'
+                                }`}
                         >
                             <tab.icon className="w-4 h-4" />
                             {tab.label}
@@ -224,7 +224,7 @@ export default function Settings() {
                                             {keyMode === 'DEFAULT' ? '默认密钥' : '自定义密钥'}
                                         </div>
                                     </div>
-                                    
+
                                     {keyMode === 'CUSTOM' && (
                                         <>
                                             <div className="p-4 rounded-xl bg-secondary/50 border border-border/50">
@@ -247,8 +247,8 @@ export default function Settings() {
                                     <div className="p-4 rounded-xl bg-secondary/50 border border-border/50">
                                         <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">AI 功能</span>
                                         <div className="mt-2 flex items-center gap-2 font-medium">
-                                            {keyMode === 'DEFAULT' || hasCloudBackup 
-                                                ? <span className="text-green-500 text-sm">✓ 可用</span> 
+                                            {keyMode === 'DEFAULT' || hasCloudBackup
+                                                ? <span className="text-green-500 text-sm">✓ 可用</span>
                                                 : <span className="text-muted-foreground text-sm">✗ 不可用</span>}
                                         </div>
                                     </div>
@@ -322,26 +322,7 @@ export default function Settings() {
 
                     {activeTab === 'account' && (
                         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
-                                    <User className="w-5 h-5" />
-                                </div>
-                                <h2 className="text-lg font-semibold">账户信息</h2>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="flex justify-between py-3 border-b border-border/50">
-                                    <span className="text-muted-foreground">用户名</span>
-                                    <span className="font-medium">{user?.userName}</span>
-                                </div>
-                                <div className="flex justify-between py-3 border-b border-border/50">
-                                    <span className="text-muted-foreground">邮箱</span>
-                                    <span className="font-medium">{user?.email || '未设置'}</span>
-                                </div>
-                                <div className="flex justify-between py-3 border-b border-border/50">
-                                    <span className="text-muted-foreground">用户ID</span>
-                                    <span className="font-mono text-sm bg-secondary px-2 py-1 rounded">{user?.userId}</span>
-                                </div>
-                            </div>
+                            <ProfileSection user={user} />
                         </div>
                     )}
                 </div>
@@ -350,35 +331,35 @@ export default function Settings() {
             {/* Modals - Using fixed positioning with backdrop blur */}
             {(showPasswordModal || showUnlockModal || showChangeKeyModal || confirmModal.isOpen) && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-                    
+
                     {/* Confirmation Modal */}
                     {confirmModal.isOpen && (
-                         <div className="bg-card w-full max-w-md border border-border rounded-2xl shadow-xl p-6 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-                             <div className="flex items-start gap-4 mb-4">
-                                 <div className={`p-2 rounded-full ${confirmModal.variant === 'danger' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
-                                     <AlertTriangle className="w-6 h-6" />
-                                 </div>
-                                 <div>
-                                     <h2 className="text-lg font-bold">{confirmModal.title}</h2>
-                                     <p className="text-sm text-muted-foreground mt-1">{confirmModal.description}</p>
-                                 </div>
-                             </div>
-                             <div className="flex justify-end gap-3 mt-6">
-                                 <Button variant="ghost" onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}>取消</Button>
-                                 <Button 
-                                     variant={confirmModal.variant === 'danger' ? 'danger' : 'primary'}
+                        <div className="bg-card w-full max-w-md border border-border rounded-2xl shadow-xl p-6 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-start gap-4 mb-4">
+                                <div className={`p-2 rounded-full ${confirmModal.variant === 'danger' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
+                                    <AlertTriangle className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-bold">{confirmModal.title}</h2>
+                                    <p className="text-sm text-muted-foreground mt-1">{confirmModal.description}</p>
+                                </div>
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6">
+                                <Button variant="ghost" onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}>取消</Button>
+                                <Button
+                                    variant={confirmModal.variant === 'danger' ? 'danger' : 'primary'}
                                     onClick={confirmModal.action}
                                     disabled={isLoading}
                                 >
                                     {isLoading ? '处理中...' : '确认'}
                                 </Button>
-                             </div>
-                         </div>
+                            </div>
+                        </div>
                     )}
 
                     {!confirmModal.isOpen && (
                         <div className="bg-card w-full max-w-md border border-border rounded-2xl shadow-xl p-6 animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
-                            
+
                             {/* Password Modal Content */}
                             {showPasswordModal && (
                                 <>
@@ -416,13 +397,13 @@ export default function Settings() {
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <label className="text-sm font-medium">密码</label>
-                                            <Input 
-                                                type="password" 
-                                                value={unlockPassword} 
-                                                onChange={e => setUnlockPassword(e.target.value)} 
-                                                placeholder="输入密码" 
+                                            <Input
+                                                type="password"
+                                                value={unlockPassword}
+                                                onChange={e => setUnlockPassword(e.target.value)}
+                                                placeholder="输入密码"
                                                 autoFocus
-                                                onKeyDown={e => e.key === 'Enter' && handleUnlock()} 
+                                                onKeyDown={e => e.key === 'Enter' && handleUnlock()}
                                             />
                                         </div>
                                         <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
@@ -473,5 +454,106 @@ export default function Settings() {
                 </div>
             )}
         </div>
+    );
+}
+
+function ProfileSection({ user }: { user: any }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        userName: user?.userName || '',
+        email: user?.email || '',
+    });
+    const { login } = useAuthStore();
+
+    useEffect(() => {
+        if (user) {
+            setFormData({
+                userName: user.userName || '',
+                email: user.email || '',
+            });
+        }
+    }, [user]);
+
+    const handleSave = async () => {
+        if (!formData.userName.trim()) {
+            toast.error('用户名不能为空');
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const updatedUser = await authApi.updateUser(formData);
+            login(updatedUser, localStorage.getItem('access_token') || '', localStorage.getItem('refresh_token') || '');
+            toast.success('个人信息已更新');
+            setIsEditing(false);
+        } catch (error: any) {
+            console.error('Update failed:', error);
+            // Error handling is done in api interceptor or specific component
+            toast.error('更新失败: ' + (error.response?.data?.message || '请稍后重试'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
+                        <User className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-lg font-semibold">账户信息</h2>
+                </div>
+                {!isEditing ? (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                        <Pencil className="w-4 h-4 mr-2" />
+                        编辑
+                    </Button>
+                ) : (
+                    <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={isLoading}>
+                            取消
+                        </Button>
+                        <Button size="sm" onClick={handleSave} disabled={isLoading}>
+                            {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                            保存
+                        </Button>
+                    </div>
+                )}
+            </div>
+
+            <div className="space-y-4">
+                <div className="flex justify-between py-3 border-b border-border/50 items-center">
+                    <span className="text-muted-foreground w-20">用户名</span>
+                    {isEditing ? (
+                        <Input
+                            value={formData.userName}
+                            onChange={e => setFormData(prev => ({ ...prev, userName: e.target.value }))}
+                            className="max-w-[200px]"
+                        />
+                    ) : (
+                        <span className="font-medium">{user?.userName}</span>
+                    )}
+                </div>
+                <div className="flex justify-between py-3 border-b border-border/50 items-center">
+                    <span className="text-muted-foreground w-20">邮箱</span>
+                    {isEditing ? (
+                        <Input
+                            value={formData.email}
+                            onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                            className="max-w-[200px]"
+                            type="email"
+                        />
+                    ) : (
+                        <span className="font-medium">{user?.email || '未设置'}</span>
+                    )}
+                </div>
+                <div className="flex justify-between py-3 border-b border-border/50 items-center">
+                    <span className="text-muted-foreground w-20">用户ID</span>
+                    <span className="font-mono text-sm bg-secondary px-2 py-1 rounded">{user?.userId}</span>
+                </div>
+            </div>
+        </>
     );
 }

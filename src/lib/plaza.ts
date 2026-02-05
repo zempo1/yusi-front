@@ -20,7 +20,7 @@ export interface SoulResonance {
   createdAt: string;
 }
 
-export interface Page<T> {
+export interface PlazaPage<T> {
   content: T[];
   totalPages: number;
   totalElements: number;
@@ -34,19 +34,19 @@ export interface Page<T> {
 export const getFeed = async (
   page: number = 1,
   emotion?: string,
-): Promise<Page<SoulCard>> => {
+): Promise<PlazaPage<SoulCard>> => {
   const url =
     emotion && emotion !== "All"
       ? `/plaza/feed?page=${page}&emotion=${emotion}`
       : `/plaza/feed?page=${page}`;
-  const res = await api.get<ApiResponse<Page<SoulCard>>>(url);
+  const res = await api.get<ApiResponse<PlazaPage<SoulCard>>>(url);
   return res.data?.data;
 };
 
 export const getMyCards = async (
   page: number = 1,
-): Promise<Page<SoulCard>> => {
-  const res = await api.get<ApiResponse<Page<SoulCard>>>(`/plaza/my?page=${page}`);
+): Promise<PlazaPage<SoulCard>> => {
+  const res = await api.get<ApiResponse<PlazaPage<SoulCard>>>(`/plaza/my?page=${page}`);
   return res.data?.data;
 };
 

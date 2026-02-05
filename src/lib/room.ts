@@ -1,6 +1,6 @@
 import { api } from "./api";
 
-export interface Scenario {
+export interface RoomScenario {
   id: string;
   title: string;
   description: string;
@@ -11,7 +11,7 @@ export interface Room {
   status: "WAITING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   ownerId?: string;
   scenarioId?: string;
-  scenario?: Scenario;
+  scenario?: RoomScenario;
   members: string[];
   memberNames?: Record<string, string>;
   submissions: Record<string, string>;
@@ -67,12 +67,12 @@ export interface SubmitScenarioRequest {
   description: string;
 }
 
-export const getScenarios = async (): Promise<Scenario[]> => {
+export const getScenarios = async (): Promise<RoomScenario[]> => {
   const { data } = await api.get("/room/scenarios");
   return data.data;
 };
 
-export const submitScenario = async (req: SubmitScenarioRequest): Promise<Scenario> => {
+export const submitScenario = async (req: SubmitScenarioRequest): Promise<RoomScenario> => {
   const { data } = await api.post("/room/scenarios/submit", req);
   return data.data;
 };

@@ -154,6 +154,8 @@ export interface RegisterRequest {
 export const authApi = {
   login: (data: LoginRequest) => api.post("/user/login", data),
   register: (data: RegisterRequest) => api.post("/user/register", data),
+  updateUser: (data: { userName?: string; email?: string }) =>
+    api.post<User>("/user/update", data).then((res) => res.data),
 };
 
 export const matchApi = {
@@ -172,4 +174,47 @@ export const soulChatApi = {
     api.get(`/soul-chat/history?matchId=${matchId}`),
   markAsRead: (matchId: number) => api.post("/soul-chat/read", { matchId }),
   getUnreadCount: () => api.get("/soul-chat/unread/count"),
+};
+
+export interface AdminStats {
+  totalUsers: number;
+  totalDiaries: number;
+  pendingScenarios: number;
+  totalRooms: number;
+}
+
+export interface User {
+  id: number;
+  userId: string;
+  userName: string;
+  email?: string;
+  isMatchEnabled: boolean;
+  matchIntent?: string;
+  permissionLevel: number;
+}
+
+export interface Scenario {
+  id: string;
+  title: string;
+  description: string;
+  submitterId: string;
+  status: number;
+  rejectReason?: string;
+}
+
+export interface Page<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+}
+
+export const adminApi = {
+  getStats: () => api.get<ApiResponse<AdminStats>>("/admin/stats"),
+  getUsers: (page = 0, size = 10, search = "") => api.get<Page<User>>(`/admin/users?page=${page}&size=${size}&search=${search}`),
+  updateUserPermission: (userId: string, level: number) => api.post(`/admin/users/${userId}/permission`, { level }),
+  getPendingScenarios: (page = 0, size = 10) => api.get<Page<Scenario>>(`/admin/scenarios/pending?page=${page}&size=${size}`),
+  auditScenario: (scenarioId: string, approved: boolean, rejectReason?: string) =>
+    api.post(`/admin/scenarios/${scenarioId}/audit`, { approved, rejectReason }),
 };
