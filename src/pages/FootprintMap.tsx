@@ -70,6 +70,10 @@ const loadAMapSDK = (): Promise<AMapSDK> => {
         // 使用占位符，部署时由 entrypoint.sh 替换为实际 key
         // 开发环境优先读取 VITE_AMAP_JS_KEY
         const amapKey = import.meta.env.VITE_AMAP_JS_KEY || '__AMAP_JS_KEY__'
+        if (!amapKey || amapKey === '__AMAP_JS_KEY__') {
+            reject(new Error('AMAP_JS_KEY_MISSING'))
+            return
+        }
         script.src = `https://webapi.amap.com/maps?v=2.0&key=${amapKey}&callback=_initAMap`
         script.async = true
 
@@ -145,10 +149,15 @@ export default function FootprintMap() {
                     return
                 }
 
-                // 创建地图
+                const points = footprints.filter(fp => Number.isFinite(fp.longitude) && Number.isFinite(fp.latitude))
+                if (points.length === 0) {
+                    setMapLoading(false)
+                    return
+                }
+
                 const map = new AMap.Map(container, {
                     zoom: 12,
-                    center: [footprints[0].longitude, footprints[0].latitude],
+                    center: [points[0].longitude, points[0].latitude],
                     mapStyle: 'amap://styles/dark',
                     viewMode: '2D'
                 })
@@ -161,7 +170,7 @@ export default function FootprintMap() {
 
                 // 添加足迹标记
                 const bounds: LngLatTuple[] = []
-                footprints.forEach((fp, index) => {
+                points.forEach((fp, index) => {
                     const marker = new AMap.Marker({
                         position: [fp.longitude, fp.latitude],
                         title: fp.placeName || fp.address || '足迹',
@@ -191,7 +200,11 @@ export default function FootprintMap() {
                 setMapLoading(false)
             } catch (e) {
                 console.error('Map init failed:', e)
-                toast.error('地图加载失败')
+                if (e instanceof Error && e.message === 'AMAP_JS_KEY_MISSING') {
+                    toast.error('地图密钥未配置')
+                } else {
+                    toast.error('地图加载失败')
+                }
                 setMapLoading(false)
             }
         }
