@@ -3,7 +3,7 @@ import { cn } from "../../utils";
 import { LayoutDashboard, Users, FileText, ArrowLeft, Menu, type LucideIcon } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/Sheet";
 import { Button } from "../../components/ui/Button";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type NavItem = {
     label: string;
@@ -66,9 +66,18 @@ const SidebarContent = ({
 export const AdminLayout = () => {
     const { pathname } = useLocation();
     const [isOpen, setIsOpen] = useState(false);
+    const mainRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (mainRef.current) {
+            mainRef.current.scrollTo({ top: 0, left: 0 });
+        } else {
+            window.scrollTo(0, 0);
+        }
+    }, [pathname]);
 
     return (
-        <div className="flex h-screen bg-background">
+        <div className="app-shell flex-row pb-0 h-screen">
             {/* Desktop Sidebar */}
             <aside className="hidden md:block w-64 border-r border-border bg-card/50 backdrop-blur-xl">
                 <SidebarContent navItems={navItems} pathname={pathname} onNavigate={() => setIsOpen(false)} />
@@ -90,7 +99,7 @@ export const AdminLayout = () => {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto md:pt-0 pt-16">
+            <main ref={mainRef} className="flex-1 overflow-auto md:pt-0 pt-16">
                 <div className="container mx-auto p-4 md:p-8 max-w-7xl">
                     <Outlet />
                 </div>

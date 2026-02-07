@@ -61,6 +61,18 @@
       background-position: -200% 0;
     }
   }
+
+  @keyframes typewriter-blink {
+    0%,
+    45% {
+      opacity: 1;
+    }
+
+    50%,
+    100% {
+      opacity: 0;
+    }
+  }
 }
 
 @layer base {
@@ -189,5 +201,14 @@
 
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400 dark:to-purple-300;
+  }
+
+  .typewriter-cursor {
+    @apply inline-block w-2 h-4 bg-primary/70 align-middle rounded-sm;
+    animation: typewriter-blink 1s steps(1, end) infinite;
+  }
+
+  .app-shell {
+    @apply flex min-h-screen flex-col font-sans antialiased pb-16 md:pb-0 relative overflow-x-hidden bg-background text-foreground transition-colors duration-300;
   }
 }
