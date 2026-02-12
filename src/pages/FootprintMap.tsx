@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapPin, Calendar, ChevronLeft, Loader2, Map, List, Filter, Compass, AlertCircle, Sparkles, Navigation } from 'lucide-react'
+import { MapPin, Calendar, ChevronLeft, Map, List, Filter, Compass, AlertCircle, Sparkles, Navigation } from 'lucide-react'
 import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button, Card, CardHeader, CardTitle, CardContent } from '../components/ui'
