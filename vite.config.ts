@@ -31,7 +31,7 @@ export default defineConfig({
     port: 5174,
     proxy: {
       '/api': {
-        target: 'http://aseubel.xyz:611',
+        target: 'http://aseubel.cn:611',
         changeOrigin: true,
       },
     },
