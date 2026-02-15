@@ -50,9 +50,9 @@ export const Layout = ({ children }: LayoutProps) => {
   const navItems = [
     { label: '首页', href: '/', icon: Home },
     { label: '广场', href: '/plaza', icon: Users },
-    { label: '情景室', href: '/room', icon: LayoutGrid },
-    { label: '日记', href: '/diary', icon: Book },
-    { label: '匹配', href: '/match', icon: Heart },
+    { label: '情景叙事', href: '/room', icon: LayoutGrid },
+    { label: '记忆', href: '/diary', icon: Book },
+    { label: '深度理解', href: '/match', icon: Heart },
   ]
 
   const startTyping = () => {

@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react'
 import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Textarea, toast } from '../ui'
 import { submitScenario, getMyScenarios, updateScenario, deleteScenario, resubmitScenario, getStatusText, getStatusColor, STATUS_PENDING, STATUS_MANUAL_APPROVED, STATUS_AI_APPROVED, type MyScenario } from '../../lib/room'
 import { useRequireAuth } from '../../lib'
-import { Info, X, CheckCircle, AlertCircle, PenTool, Users, History, Trash2, RefreshCw, Edit2 } from 'lucide-react'
+import { Info, X, CheckCircle, AlertCircle, PenTool, Users, Trash2, RefreshCw, Edit2 } from 'lucide-react'
 
-export const ScenarioSubmit = () => {
+interface ScenarioSubmitProps {
+  isModalMode?: boolean
+}
+
+export const ScenarioSubmit = ({ isModalMode = false }: ScenarioSubmitProps) => {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [showGuide, setShowGuide] = useState(false)
-  const [showHistory, setShowHistory] = useState(false)
   const [myScenarios, setMyScenarios] = useState<MyScenario[]>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [editingScenario, setEditingScenario] = useState<MyScenario | null>(null)
@@ -28,10 +31,10 @@ export const ScenarioSubmit = () => {
   }
 
   useEffect(() => {
-    if (showHistory) {
+    if (isModalMode) {
       fetchMyScenarios()
     }
-  }, [showHistory])
+  }, [isModalMode])
 
   const handleSubmit = async () => {
     if (!requireAuth('投稿情景需要登录')) {
@@ -53,9 +56,7 @@ export const ScenarioSubmit = () => {
       }
       setTitle('')
       setDescription('')
-      if (showHistory) {
-        fetchMyScenarios()
-      }
+      fetchMyScenarios()
     } catch {
       toast.error('提交失败')
     } finally {
@@ -67,7 +68,6 @@ export const ScenarioSubmit = () => {
     setEditingScenario(scenario)
     setTitle(scenario.title)
     setDescription(scenario.description)
-    setShowHistory(false)
   }
 
   const handleDelete = async (id: string) => {
@@ -97,6 +97,117 @@ export const ScenarioSubmit = () => {
     setDescription('')
   }
 
+  if (isModalMode) {
+    return (
+      <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+        {loadingHistory ? (
+          <div className="text-center py-12 text-muted-foreground">加载中...</div>
+        ) : myScenarios.length === 0 ? (
+          <div className="text-center py-12">
+            <FileTextIcon className="w-12 h-12 mx-auto text-muted-foreground/30 mb-4" />
+            <p className="text-muted-foreground mb-4">暂无投稿记录</p>
+            <p className="text-sm text-muted-foreground">在下方创作你的第一个情景吧</p>
+          </div>
+        ) : (
+          <div className="space-y-4 mb-8">
+            {myScenarios.map((scenario) => (
+              <div
+                key={scenario.id}
+                className="p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-semibold truncate">{scenario.title}</h3>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${getStatusColor(scenario.status)}`}>
+                        {getStatusText(scenario.status)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{scenario.description}</p>
+                    {scenario.rejectReason && (
+                      <p className="text-sm text-destructive mt-2">
+                        拒绝原因：{scenario.rejectReason}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {scenario.status !== STATUS_PENDING && scenario.status !== STATUS_MANUAL_APPROVED && scenario.status !== STATUS_AI_APPROVED && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleResubmit(scenario.id)}
+                        title="重新提交"
+                      >
+                        <RefreshCw className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                      </Button>
+                    )}
+                    {scenario.status !== STATUS_PENDING && scenario.status !== STATUS_MANUAL_APPROVED && scenario.status !== STATUS_AI_APPROVED && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(scenario)}
+                        title="编辑"
+                      >
+                        <Edit2 className="w-4 h-4 text-muted-foreground hover:text-primary" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(scenario.id)}
+                      title="删除"
+                    >
+                      <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="border-t border-border pt-6">
+          <h3 className="font-semibold mb-4">创作新情景</h3>
+          {editingScenario && (
+            <div className="flex items-center justify-between p-2 bg-amber-50 dark:bg-amber-950/20 rounded-lg text-sm text-amber-600 dark:text-amber-400 mb-4">
+              <span>正在编辑：{editingScenario.title}</span>
+              <Button variant="ghost" size="sm" onClick={handleCancelEdit}>
+                取消
+              </Button>
+            </div>
+          )}
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium mb-1 block">标题</label>
+              <Input 
+                value={title} 
+                onChange={(e) => setTitle(e.target.value)} 
+                placeholder="请输入情景标题" 
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">描述</label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="请输入情景描述（背景、冲突、角色等）"
+                className="min-h-[100px]"
+              />
+            </div>
+            <Button 
+              isLoading={loading} 
+              onClick={handleSubmit} 
+              className="w-full"
+              disabled={isModalMode}
+            >
+              {editingScenario ? '保存修改' : '提交审核'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <Card className="h-full flex flex-col">
@@ -115,18 +226,6 @@ export const ScenarioSubmit = () => {
               </CardTitle>
               <CardDescription>分享你的创意情景，审核通过后将展示给所有人。</CardDescription>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (!requireAuth('查看投稿记录需要登录')) return
-                setShowHistory(true)
-              }}
-              className="text-muted-foreground hover:text-primary"
-            >
-              <History className="w-4 h-4 mr-1" />
-              投稿记录
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 flex-1">
@@ -159,7 +258,6 @@ export const ScenarioSubmit = () => {
         </CardFooter>
       </Card>
 
-      {/* 情景投稿规范弹窗 */}
       {showGuide && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
@@ -232,105 +330,27 @@ export const ScenarioSubmit = () => {
           </div>
         </div>
       )}
-
-      {/* 投稿记录弹窗 */}
-      {showHistory && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setShowHistory(false)}
-        >
-          <div
-            className="bg-card w-full max-w-2xl max-h-[80vh] border border-border rounded-2xl shadow-xl animate-in zoom-in-95 duration-200 flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between p-6 border-b border-border shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-full bg-primary/10 text-primary">
-                  <History className="w-5 h-5" />
-                </div>
-                <h2 className="text-lg font-bold">我的投稿记录</h2>
-              </div>
-              <button
-                onClick={() => setShowHistory(false)}
-                className="p-1.5 hover:bg-muted rounded-md transition-colors"
-                title="关闭"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-6">
-              {loadingHistory ? (
-                <div className="text-center py-8 text-muted-foreground">加载中...</div>
-              ) : myScenarios.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">暂无投稿记录</div>
-              ) : (
-                <div className="space-y-4">
-                  {myScenarios.map((scenario) => (
-                    <div
-                      key={scenario.id}
-                      className="p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold truncate">{scenario.title}</h3>
-                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium shrink-0 ${getStatusColor(scenario.status)}`}>
-                              {getStatusText(scenario.status)}
-                            </span>
-                          </div>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{scenario.description}</p>
-                          {scenario.rejectReason && (
-                            <p className="text-sm text-destructive mt-2">
-                              拒绝原因：{scenario.rejectReason}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {scenario.status !== STATUS_PENDING && scenario.status !== STATUS_MANUAL_APPROVED && scenario.status !== STATUS_AI_APPROVED && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleResubmit(scenario.id)}
-                              title="重新提交"
-                            >
-                              <RefreshCw className="w-4 h-4 text-muted-foreground hover:text-primary" />
-                            </Button>
-                          )}
-                          {scenario.status !== STATUS_PENDING && scenario.status !== STATUS_MANUAL_APPROVED && scenario.status !== STATUS_AI_APPROVED && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(scenario)}
-                              title="编辑"
-                            >
-                              <Edit2 className="w-4 h-4 text-muted-foreground hover:text-primary" />
-                            </Button>
-                          )}
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDelete(scenario.id)}
-                            title="删除"
-                          >
-                            <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end p-6 border-t border-border shrink-0">
-              <Button onClick={() => setShowHistory(false)}>
-                关闭
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
+  )
+}
+
+function FileTextIcon({ className }: { className?: string }) {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+      <polyline points="14,2 14,8 20,8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/>
+      <line x1="16" y1="17" x2="8" y2="17"/>
+      <line x1="10" y1="9" x2="8" y2="9"/>
+    </svg>
   )
 }
