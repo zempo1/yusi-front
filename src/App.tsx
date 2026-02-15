@@ -13,7 +13,9 @@ import { Community } from './pages/Community'
 import { Emotion } from './pages/Emotion'
 import { Toaster } from './components/ui'
 import Settings from './pages/Settings'
-import FootprintMap from './pages/FootprintMap'
+import { About } from './pages/About'
+import { Privacy } from './pages/Privacy'
+import { Terms } from './pages/Terms'
 
 import { Plaza } from './pages/Plaza'
 import { AdminLayout } from './components/admin/AdminLayout'
@@ -38,7 +40,9 @@ const router = createBrowserRouter([
       { path: '/plaza', element: <Plaza /> },
       { path: '/match', element: <Match /> },
       { path: '/settings', element: <Settings /> },
-      { path: '/footprints', element: <FootprintMap /> },
+      { path: '/about', element: <About /> },
+      { path: '/privacy', element: <Privacy /> },
+      { path: '/terms', element: <Terms /> },
       { path: '/login', element: <Login /> },
       { path: '/register', element: <Register /> },
     ]
