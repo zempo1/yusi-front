@@ -70,13 +70,18 @@ export const RoomChat = ({ roomCode, roomStatus, memberNames = {} }: RoomChatPro
 
     // WebSocket 连接
     useEffect(() => {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+        const wsUrl = baseUrl.replace('http', 'ws') + '/ws-chat'
+        
         // 创建 STOMP 客户端
         const client = new Client({
-            brokerURL: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'}/ws-chat`.replace('http', 'ws'),
+            brokerURL: wsUrl,
+            connectionTimeout: 10000,
             reconnectDelay: 5000,
             heartbeatIncoming: 4000,
             heartbeatOutgoing: 4000,
             onConnect: () => {
+                console.log('WebSocket connected to room:', roomCode)
                 // 订阅房间消息
                 client.subscribe(`/topic/room/${roomCode}`, (message) => {
                     const roomMsg: RoomMessage = JSON.parse(message.body)
@@ -94,9 +99,15 @@ export const RoomChat = ({ roomCode, roomStatus, memberNames = {} }: RoomChatPro
                     }
                 })
             },
+            onDisconnect: () => {
+                console.log('WebSocket disconnected from room:', roomCode)
+            },
             onStompError: (frame) => {
                 console.error('Broker reported error: ' + frame.headers['message'])
                 console.error('Additional details: ' + frame.body)
+            },
+            onWebSocketError: (event) => {
+                console.error('WebSocket error:', event)
             }
         })
 
