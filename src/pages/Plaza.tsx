@@ -224,18 +224,20 @@ export const Plaza = () => {
                         <Globe className="w-4 h-4" />
                         广场
                     </button>
-                    <button
-                        onClick={() => handleTabChange('my')}
-                        className={cn(
-                            "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium transition-all duration-300",
-                            activeTab === 'my'
-                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                                : "bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20"
-                        )}
-                    >
-                        <User className="w-4 h-4" />
-                        我的
-                    </button>
+                    {isLoggedIn && (
+                        <button
+                            onClick={() => handleTabChange('my')}
+                            className={cn(
+                                "flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium transition-all duration-300",
+                                activeTab === 'my'
+                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                                    : "bg-card text-muted-foreground hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20"
+                            )}
+                        >
+                            <User className="w-4 h-4" />
+                            我的
+                        </button>
+                    )}
                 </motion.div>
 
                 {/* Emotion Filter - only show for feed tab */}

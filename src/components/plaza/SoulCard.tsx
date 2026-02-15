@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { cn } from '../../utils'
 import { useAuthStore } from '../../store/authStore'
+import { useNavigate } from 'react-router-dom'
 
 interface SoulCardProps {
     card: SoulCardType
@@ -42,14 +43,20 @@ const EMOTION_COLORS: Record<string, string> = {
 }
 
 export const SoulCard = ({ card, isOwn, onEdit, onDelete }: SoulCardProps) => {
+    const navigate = useNavigate()
     const { user } = useAuthStore()
     const [count, setCount] = useState(card.resonanceCount)
     const [resonated, setResonated] = useState(card.isResonated || false)
     const [loading, setLoading] = useState(false)
     const [showOptions, setShowOptions] = useState(false)
     const isOwner = Boolean(isOwn || (user && card.userId === user.userId))
+    const isLoggedIn = Boolean(user)
 
     const handleResonate = async (type: 'EMPATHY' | 'HUG' | 'SAME_HERE') => {
+        if (!isLoggedIn) {
+            navigate('/login', { state: { from: window.location.pathname } })
+            return
+        }
         if (resonated || isOwner) return
         setLoading(true)
         try {
@@ -60,7 +67,7 @@ export const SoulCard = ({ card, isOwn, onEdit, onDelete }: SoulCardProps) => {
             toast.success('已共鸣')
         } catch (e: unknown) {
             if (e instanceof Error && e.message?.includes('共鸣')) {
-                setResonated(true) // assume already resonated
+                setResonated(true)
                 setShowOptions(false)
             }
         } finally {
@@ -167,13 +174,19 @@ export const SoulCard = ({ card, isOwn, onEdit, onDelete }: SoulCardProps) => {
                                         ? "text-red-500 bg-red-50 dark:bg-red-950/20"
                                         : isOwner
                                             ? "text-muted-foreground bg-muted/40"
-                                            : "hover:bg-primary/5 hover:text-primary"
+                                            : isLoggedIn
+                                                ? "hover:bg-primary/5 hover:text-primary"
+                                                : "text-muted-foreground/50 cursor-not-allowed"
                                 )}
                                 onClick={() => {
+                                    if (!isLoggedIn) {
+                                        navigate('/login', { state: { from: window.location.pathname } })
+                                        return
+                                    }
                                     if (resonated || isOwner) return
                                     setShowOptions(!showOptions)
                                 }}
-                                disabled={resonated || isOwner || loading}
+                                disabled={resonated || isOwner || loading || !isLoggedIn}
                             >
                                 <Heart className={cn("w-4 h-4 transition-transform", resonated && "fill-current scale-110")} />
                                 <span className="font-medium">{count > 0 ? count : '共鸣'}</span>

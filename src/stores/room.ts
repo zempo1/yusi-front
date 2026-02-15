@@ -6,6 +6,7 @@ export interface Scenario {
   id: string;
   title: string;
   description: string;
+  summary?: string;
 }
 
 export interface Room {

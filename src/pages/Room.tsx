@@ -39,6 +39,7 @@ export const Room = () => {
     action: async () => { },
   })
   const [countdown, setCountdown] = useState<number | null>(null)
+  const [scenarioExpanded, setScenarioExpanded] = useState(false)
 
   const fetchRoom = useCallback(async () => {
     if (!code) return
@@ -356,7 +357,35 @@ export const Room = () => {
             <CardTitle className="text-lg md:text-xl">{room.scenario.title}</CardTitle>
           </CardHeader>
           <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
-            <p className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{room.scenario.description}</p>
+            {scenarioExpanded ? (
+              <div className="space-y-3">
+                <p className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{room.scenario.description}</p>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setScenarioExpanded(false)}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  收起
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">
+                  {room.scenario.summary || room.scenario.description.substring(0, 80) + '...'}
+                </p>
+                {room.scenario.description && room.scenario.description.length > 80 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setScenarioExpanded(true)}
+                    className="text-xs"
+                  >
+                    展开全文
+                  </Button>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
