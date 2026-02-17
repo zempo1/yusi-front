@@ -4,8 +4,10 @@ import { Button } from "../../components/ui/Button";
 import { Card, CardContent } from "../../components/ui/Card";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { InputDialog } from "../../components/ui/InputDialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "../../components/ui/Sheet";
+import { Select } from "../../components/ui/Select";
 import { toast } from "sonner";
-import { Loader2, Check, X, AlertCircle, FileText, ChevronLeft, ChevronRight, RefreshCw, User, Bot, Shield, Filter } from "lucide-react";
+import { Loader2, Check, X, AlertCircle, FileText, ChevronLeft, ChevronRight, RefreshCw, User, Bot, Shield, Calendar, Clock } from "lucide-react";
 
 const STATUS_MAP: Record<number, { label: string; color: string }> = {
     [-1]: { label: '已删除', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
@@ -26,6 +28,18 @@ const getSourceInfo = (submitterId: string | null | undefined): { label: string;
     return { label: '用户投稿', icon: User, color: 'text-green-500' };
 };
 
+const formatDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
 export const ScenarioAudit = () => {
     const [scenarios, setScenarios] = useState<Scenario[]>([]);
     const [page, setPage] = useState(0);
@@ -37,6 +51,8 @@ export const ScenarioAudit = () => {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [rejectOpen, setRejectOpen] = useState(false);
     const [selectedScenario, setSelectedScenario] = useState<string | null>(null);
+    const [detailScenario, setDetailScenario] = useState<Scenario | null>(null);
+    const [detailOpen, setDetailOpen] = useState(false);
 
     const getTotalPages = (data: unknown): number => {
         if (!data || typeof data !== "object") return 0;
@@ -75,6 +91,11 @@ export const ScenarioAudit = () => {
         loadScenarios();
     }, [loadScenarios]);
 
+    const onCardClick = (scenario: Scenario) => {
+        setDetailScenario(scenario);
+        setDetailOpen(true);
+    };
+
     const onApproveClick = (id: string) => {
         setSelectedScenario(id);
         setConfirmOpen(true);
@@ -106,6 +127,7 @@ export const ScenarioAudit = () => {
         try {
             await adminApi.auditScenario(scenarioId, approved, rejectReason);
             toast.success(approved ? "已通过" : "已拒绝");
+            setDetailOpen(false);
             loadScenarios();
         } catch (error) {
             console.error(error);
@@ -127,24 +149,21 @@ export const ScenarioAudit = () => {
                     <p className="text-muted-foreground text-sm">管理所有情景内容，区分来源</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card">
-                        <Filter className="w-4 h-4 text-muted-foreground" />
-                        <select
-                            value={statusFilter ?? ''}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                setStatusFilter(val === '' ? undefined : Number(val));
-                                setPage(0);
-                            }}
-                            className="bg-transparent text-sm outline-none cursor-pointer"
-                        >
-                            <option value="">全部状态</option>
-                            <option value="0">待审核</option>
-                            <option value="1">已拒绝</option>
-                            <option value="3">AI通过</option>
-                            <option value="4">已通过</option>
-                        </select>
-                    </div>
+                    <Select
+                        value={statusFilter ?? ''}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setStatusFilter(val === '' ? undefined : Number(val));
+                            setPage(0);
+                        }}
+                        className="w-32"
+                    >
+                        <option value="">全部状态</option>
+                        <option value="0">待审核</option>
+                        <option value="1">已拒绝</option>
+                        <option value="3">AI通过</option>
+                        <option value="4">已通过</option>
+                    </Select>
                     <Button variant="outline" size="sm" onClick={() => loadScenarios()} className="gap-2 shrink-0">
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                         刷新
@@ -171,23 +190,24 @@ export const ScenarioAudit = () => {
                         const SourceIcon = sourceInfo.icon;
                         
                         return (
-                            <Card key={scenario.id} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
+                            <Card 
+                                key={scenario.id} 
+                                className="overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer"
+                                onClick={() => onCardClick(scenario)}
+                            >
                                 <CardContent className="p-0">
-                                    <div className="p-4 md:p-5 space-y-4">
+                                    <div className="p-4 md:p-5 space-y-3">
                                         <div className="flex items-start justify-between gap-3">
-                                            <h3 className="text-lg font-semibold leading-tight line-clamp-2">{scenario.title}</h3>
+                                            <h3 className="text-base font-semibold leading-tight line-clamp-1">{scenario.title}</h3>
                                             <div className="flex flex-col items-end gap-1 shrink-0">
                                                 <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusInfo.color}`}>
                                                     {statusInfo.label}
                                                 </span>
-                                                <span className="text-[10px] text-muted-foreground font-mono">
-                                                    #{scenario.id.substring(0, 6)}
-                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="bg-muted/50 rounded-lg p-3 md:p-4">
-                                            <p className="text-sm leading-relaxed whitespace-pre-wrap line-clamp-4 md:line-clamp-6 text-muted-foreground">
+                                        <div className="bg-muted/50 rounded-lg p-3">
+                                            <p className="text-sm leading-relaxed whitespace-pre-wrap line-clamp-2 text-muted-foreground">
                                                 {scenario.description}
                                             </p>
                                         </div>
@@ -196,47 +216,9 @@ export const ScenarioAudit = () => {
                                             <div className="flex items-center gap-1.5">
                                                 <SourceIcon className={`w-3.5 h-3.5 ${sourceInfo.color}`} />
                                                 <span>{sourceInfo.label}</span>
-                                                {scenario.submitterId && !scenario.submitterId.startsWith('admin_') && scenario.submitterId !== 'SYSTEM' && (
-                                                    <span className="font-mono text-[10px]">({scenario.submitterId.substring(0, 8)}...)</span>
-                                                )}
                                             </div>
+                                            <span className="text-[10px] font-mono">#{scenario.id.substring(0, 6)}</span>
                                         </div>
-
-                                        {scenario.status === 0 && (
-                                            <div className="flex gap-3 pt-2 border-t border-border">
-                                                <Button
-                                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                                    disabled={processing === scenario.id}
-                                                    onClick={() => onApproveClick(scenario.id)}
-                                                >
-                                                    {processing === scenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                                        <>
-                                                            <Check className="w-4 h-4 mr-1.5" />
-                                                            通过
-                                                        </>
-                                                    )}
-                                                </Button>
-                                                <Button
-                                                    variant="danger"
-                                                    className="flex-1"
-                                                    disabled={processing === scenario.id}
-                                                    onClick={() => onRejectClick(scenario.id)}
-                                                >
-                                                    {processing === scenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                                        <>
-                                                            <X className="w-4 h-4 mr-1.5" />
-                                                            拒绝
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </div>
-                                        )}
-
-                                        {scenario.rejectReason && (
-                                            <div className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                                                拒绝理由: {scenario.rejectReason}
-                                            </div>
-                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -274,6 +256,117 @@ export const ScenarioAudit = () => {
                     </Button>
                 </div>
             )}
+
+            <Sheet open={detailOpen} onOpenChange={setDetailOpen}>
+                <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+                    {detailScenario && (
+                        <>
+                            <SheetHeader>
+                                <SheetTitle className="flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-primary" />
+                                    情景详情
+                                </SheetTitle>
+                                <SheetDescription>
+                                    查看情景完整内容并进行审核操作
+                                </SheetDescription>
+                            </SheetHeader>
+
+                            <div className="mt-6 space-y-6">
+                                <div className="flex items-center justify-between">
+                                    {(() => {
+                                        const statusInfo = STATUS_MAP[detailScenario.status] || { label: '未知', color: 'bg-gray-100 text-gray-600' };
+                                        return (
+                                            <span className={`text-xs font-medium px-3 py-1 rounded-full ${statusInfo.color}`}>
+                                                {statusInfo.label}
+                                            </span>
+                                        );
+                                    })()}
+                                    <span className="text-xs text-muted-foreground font-mono">
+                                        ID: {detailScenario.id}
+                                    </span>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h3 className="text-lg font-semibold">{detailScenario.title}</h3>
+                                </div>
+
+                                <div className="bg-muted/50 rounded-lg p-4">
+                                    <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                                        {detailScenario.description}
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    {(() => {
+                                        const sourceInfo = getSourceInfo(detailScenario.submitterId);
+                                        const SourceIcon = sourceInfo.icon;
+                                        return (
+                                            <div className="flex items-center gap-2">
+                                                <SourceIcon className={`w-4 h-4 ${sourceInfo.color}`} />
+                                                <span className="text-muted-foreground">来源:</span>
+                                                <span>{sourceInfo.label}</span>
+                                            </div>
+                                        );
+                                    })()}
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                                        <span className="text-muted-foreground">创建:</span>
+                                        <span>{formatDate(detailScenario.createTime)}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="w-4 h-4 text-muted-foreground" />
+                                        <span className="text-muted-foreground">更新:</span>
+                                        <span>{formatDate(detailScenario.updateTime)}</span>
+                                    </div>
+                                </div>
+
+                                {detailScenario.rejectReason && (
+                                    <div className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                                        <span className="font-medium">拒绝理由: </span>
+                                        {detailScenario.rejectReason}
+                                    </div>
+                                )}
+
+                                {detailScenario.status === 0 && (
+                                    <div className="flex gap-3 pt-4 border-t border-border">
+                                        <Button
+                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                            disabled={processing === detailScenario.id}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onApproveClick(detailScenario.id);
+                                            }}
+                                        >
+                                            {processing === detailScenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                                <>
+                                                    <Check className="w-4 h-4 mr-1.5" />
+                                                    通过
+                                                </>
+                                            )}
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            className="flex-1"
+                                            disabled={processing === detailScenario.id}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onRejectClick(detailScenario.id);
+                                            }}
+                                        >
+                                            {processing === detailScenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                                <>
+                                                    <X className="w-4 h-4 mr-1.5" />
+                                                    拒绝
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </SheetContent>
+            </Sheet>
 
             <ConfirmDialog
                 isOpen={confirmOpen}

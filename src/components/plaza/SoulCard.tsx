@@ -78,9 +78,8 @@ export const SoulCard = ({ card, isOwn, onEdit, onDelete }: SoulCardProps) => {
     const emotionColor = EMOTION_COLORS[card.emotion] || 'bg-primary/10 text-primary border-primary/20'
 
     return (
-        <div className="break-inside-avoid mb-6">
-            <Card className="glass-card overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 border-white/20 dark:border-white/5 group">
-                <div className="p-5 space-y-4">
+        <Card className="glass-card overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 border-white/20 dark:border-white/5 group h-full">
+            <div className="p-5 space-y-4">
                     <div className="flex items-center justify-between">
                         {/* 左上角：情绪标签 */}
                         <Badge className={cn("text-xs font-medium px-2.5 py-1 border", emotionColor)}>
@@ -195,7 +194,6 @@ export const SoulCard = ({ card, isOwn, onEdit, onDelete }: SoulCardProps) => {
                     </div>
                 </div>
             </Card>
-        </div>
     )
 }
 

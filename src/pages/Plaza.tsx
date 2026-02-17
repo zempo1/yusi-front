@@ -1,6 +1,6 @@
 import { SoulCard } from '../components/plaza/SoulCard'
 import { getFeed, getMyCards, submitToPlaza, updateCard, deleteCard, type SoulCard as SoulCardType, useRequireAuth } from '../lib'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Loader2, PenLine, X, Sparkles, User, Globe } from 'lucide-react'
 import { Button, Textarea } from '../components/ui'
 import { toast } from 'sonner'
@@ -39,11 +39,19 @@ export const Plaza = () => {
     const [posting, setPosting] = useState(false)
     const [editingCard, setEditingCard] = useState<SoulCardType | null>(null)
     const { requireAuth, isLoggedIn } = useRequireAuth()
+    
+    // 用于处理竞态条件的请求ID
+    const requestIdRef = useRef(0)
 
-    const loadFeed = async (p: number, emotion: string) => {
+    const loadFeed = useCallback(async (p: number, emotion: string) => {
+        const currentRequestId = ++requestIdRef.current
         setLoading(true)
         try {
             const res = await getFeed(p, emotion)
+            // 检查是否是最新请求
+            if (currentRequestId !== requestIdRef.current) {
+                return
+            }
             if (p === 1) {
                 setCards(res.content)
             } else {
@@ -53,14 +61,21 @@ export const Plaza = () => {
         } catch (e) {
             console.error(e)
         } finally {
-            setLoading(false)
+            if (currentRequestId === requestIdRef.current) {
+                setLoading(false)
+            }
         }
-    }
+    }, [])
 
-    const loadMyCards = async (p: number) => {
+    const loadMyCards = useCallback(async (p: number) => {
+        const currentRequestId = ++requestIdRef.current
         setLoading(true)
         try {
             const res = await getMyCards(p)
+            // 检查是否是最新请求
+            if (currentRequestId !== requestIdRef.current) {
+                return
+            }
             if (p === 1) {
                 setCards(res.content)
             } else {
@@ -70,9 +85,11 @@ export const Plaza = () => {
         } catch (e) {
             console.error(e)
         } finally {
-            setLoading(false)
+            if (currentRequestId === requestIdRef.current) {
+                setLoading(false)
+            }
         }
-    }
+    }, [])
 
     useEffect(() => {
         setPage(1)
@@ -84,7 +101,7 @@ export const Plaza = () => {
                 loadMyCards(1)
             }
         }
-    }, [selectedEmotion, activeTab, isLoggedIn])
+    }, [selectedEmotion, activeTab, isLoggedIn, loadFeed, loadMyCards])
 
     const handleLoadMore = () => {
         const nextPage = page + 1
@@ -133,7 +150,8 @@ export const Plaza = () => {
             setIsPostOpen(false)
             setPostContent('')
             setEditingCard(null)
-            // Refresh
+            // Refresh - 重置请求ID确保新请求生效
+            requestIdRef.current = 0
             setPage(1)
             if (activeTab === 'feed') {
                 loadFeed(1, selectedEmotion)
@@ -265,15 +283,14 @@ export const Plaza = () => {
                     </motion.div>
                 )}
 
-                {/* Masonry-like Grid */}
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                {/* Grid Layout - 固定每行3个卡片 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {cards.map((card, index) => (
                         <motion.div
                             key={card.id}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="break-inside-avoid"
                         >
                             <SoulCard
                                 card={card}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "./Button";
 import { Input } from "./Input";
 import { Textarea } from "./Textarea";
-import { X } from "lucide-react";
+import { X, MessageSquare } from "lucide-react";
 
 interface InputDialogProps {
     isOpen: boolean;
@@ -39,20 +39,35 @@ export const InputDialog = ({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="w-full max-w-md bg-card border border-border rounded-lg shadow-lg p-6 animate-in zoom-in-95 duration-200">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold">{title}</h2>
-                    <button onClick={onCancel} className="text-muted-foreground hover:text-foreground">
-                        <X className="w-5 h-5" />
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200"
+            onClick={onCancel}
+        >
+            <div
+                className="bg-card w-full max-w-md border border-border rounded-2xl shadow-xl p-6 animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="flex items-start gap-4">
+                    <div className="p-2.5 rounded-full shrink-0 bg-primary/10 text-primary">
+                        <MessageSquare className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-bold">{title}</h2>
+                        {description && (
+                            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+                                {description}
+                            </p>
+                        )}
+                    </div>
+                    <button
+                        onClick={onCancel}
+                        className="p-1.5 hover:bg-muted rounded-md transition-colors shrink-0 -mt-1 -mr-1"
+                    >
+                        <X className="w-4 h-4 text-muted-foreground" />
                     </button>
                 </div>
 
-                {description && (
-                    <p className="text-sm text-muted-foreground mb-4">{description}</p>
-                )}
-
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="mt-6">
                     <div className="mb-6">
                         {inputType === "textarea" ? (
                             <Textarea

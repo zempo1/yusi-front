@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, Mail, Send, Loader2, ChevronLeft, Filter, User } from 'lucide-react'
+import { MessageSquare, Mail, Send, Loader2, ChevronLeft, Filter } from 'lucide-react'
 import { Button, Card, Textarea, Badge } from '../../components/ui'
 import { api } from '../../lib/api'
 import { toast } from 'sonner'
@@ -8,7 +8,6 @@ import { toast } from 'sonner'
 interface Suggestion {
     id: number
     suggestionId: string
-    userId: string
     content: string
     contactEmail: string | null
     status: string
@@ -145,11 +144,8 @@ export const SuggestionManagement = () => {
                         </div>
 
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <User className="w-4 h-4" />
-                            <span>用户ID: {selectedSuggestion.userId}</span>
                             {selectedSuggestion.contactEmail && (
                                 <>
-                                    <span className="mx-2">|</span>
                                     <Mail className="w-4 h-4" />
                                     <span>{selectedSuggestion.contactEmail}</span>
                                 </>
@@ -302,10 +298,6 @@ export const SuggestionManagement = () => {
                                             {suggestion.content}
                                         </p>
                                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                            <span className="flex items-center gap-1">
-                                                <User className="w-3 h-3" />
-                                                {suggestion.userId.slice(0, 8)}...
-                                            </span>
                                             {suggestion.contactEmail && (
                                                 <span className="flex items-center gap-1">
                                                     <Mail className="w-3 h-3" />

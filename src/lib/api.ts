@@ -207,6 +207,8 @@ export interface Scenario {
   submitterId: string;
   status: number;
   rejectReason?: string;
+  createTime?: string;
+  updateTime?: string;
 }
 
 export interface Page<T> {

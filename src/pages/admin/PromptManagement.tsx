@@ -5,6 +5,7 @@ import { Input } from "../../components/ui/Input";
 import { Textarea } from "../../components/ui/Textarea";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { Badge } from "../../components/ui/Badge";
+import { Select } from "../../components/ui/Select";
 import { Loader2, Plus, RefreshCw, Search, Pencil, Trash2, CheckCircle, XCircle, Filter, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -254,40 +255,40 @@ export const PromptManagement = () => {
                 <div className="flex flex-wrap items-center gap-4 p-4 rounded-lg bg-muted/30 border border-border">
                     <div className="space-y-1">
                         <label className="text-xs text-muted-foreground">范围</label>
-                        <select
+                        <Select
                             value={scope}
                             onChange={(e) => { setScope(e.target.value); setPage(0); }}
-                            className="bg-background border border-input rounded-md px-3 py-2 text-sm min-w-[120px]"
+                            className="min-w-[120px]"
                         >
                             <option value="">全部范围</option>
                             {SCOPE_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
                     <div className="space-y-1">
                         <label className="text-xs text-muted-foreground">语言</label>
-                        <select
+                        <Select
                             value={locale}
                             onChange={(e) => { setLocale(e.target.value); setPage(0); }}
-                            className="bg-background border border-input rounded-md px-3 py-2 text-sm min-w-[120px]"
+                            className="min-w-[120px]"
                         >
                             {LOCALE_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
                     <div className="space-y-1">
                         <label className="text-xs text-muted-foreground">状态</label>
-                        <select
+                        <Select
                             value={activeFilter}
                             onChange={(e) => { setActiveFilter(e.target.value as "all" | "active" | "inactive"); setPage(0); }}
-                            className="bg-background border border-input rounded-md px-3 py-2 text-sm min-w-[120px]"
+                            className="min-w-[120px]"
                         >
                             {STATUS_OPTIONS.map((opt) => (
                                 <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
-                        </select>
+                        </Select>
                     </div>
                 </div>
             )}
@@ -312,15 +313,14 @@ export const PromptManagement = () => {
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm text-muted-foreground">范围</label>
-                            <select
+                            <Select
                                 value={form.scope}
                                 onChange={(e) => setForm((prev) => ({ ...prev, scope: e.target.value }))}
-                                className="bg-background border border-input rounded-md px-3 py-2 text-sm w-full"
                             >
                                 {SCOPE_OPTIONS.map((opt) => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                                 ))}
-                            </select>
+                            </Select>
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm text-muted-foreground">语言</label>

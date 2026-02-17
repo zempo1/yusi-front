@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Card } from '../components/ui'
+import { Button, Card, Select } from '../components/ui'
 import { useAuthStore } from '../store/authStore'
 import { matchApi } from '../lib/api'
 import { Heart, X, MessageCircle, Sparkles, Settings, User, Clock, BookOpen, Users } from 'lucide-react'
@@ -191,15 +191,14 @@ export const Match = () => {
                   <User className="w-4 h-4" />
                   交友意图
                 </label>
-                <select
-                  className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                <Select
                   value={intent}
                   onChange={(e) => setIntent(e.target.value)}
                 >
                   <option value="寻找知己">寻找知己 (Soulmate)</option>
                   <option value="寻找朋友">寻找朋友 (Friend)</option>
                   <option value="寻找树洞">寻找树洞 (Listener)</option>
-                </select>
+                </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">匹配状态</label>
@@ -380,15 +379,15 @@ export const Match = () => {
                   <User className="w-4 h-4" />
                   你的交友意图
                 </label>
-                <select
-                  className="flex h-12 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                <Select
                   value={intent}
                   onChange={(e) => setIntent(e.target.value)}
+                  className="h-12"
                 >
                   <option value="寻找知己">寻找知己 (Soulmate)</option>
                   <option value="寻找朋友">寻找朋友 (Friend)</option>
                   <option value="寻找树洞">寻找树洞 (Listener)</option>
-                </select>
+                </Select>
               </div>
 
               <div className="pt-2">
