@@ -5,7 +5,26 @@ import { Card, CardContent } from "../../components/ui/Card";
 import { ConfirmDialog } from "../../components/ui/ConfirmDialog";
 import { InputDialog } from "../../components/ui/InputDialog";
 import { toast } from "sonner";
-import { Loader2, Check, X, AlertCircle, FileText, ChevronLeft, ChevronRight, RefreshCw, User } from "lucide-react";
+import { Loader2, Check, X, AlertCircle, FileText, ChevronLeft, ChevronRight, RefreshCw, User, Bot, Shield, Filter } from "lucide-react";
+
+const STATUS_MAP: Record<number, { label: string; color: string }> = {
+    [-1]: { label: '已删除', color: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
+    0: { label: '待审核', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+    1: { label: '已拒绝', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' },
+    2: { label: 'AI拒绝', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400' },
+    3: { label: 'AI通过', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+    4: { label: '已通过', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+};
+
+const getSourceInfo = (submitterId: string | null | undefined): { label: string; icon: typeof User; color: string } => {
+    if (!submitterId) {
+        return { label: '系统生成', icon: Bot, color: 'text-purple-500' };
+    }
+    if (submitterId.startsWith('admin_') || submitterId === 'SYSTEM') {
+        return { label: '管理员添加', icon: Shield, color: 'text-blue-500' };
+    }
+    return { label: '用户投稿', icon: User, color: 'text-green-500' };
+};
 
 export const ScenarioAudit = () => {
     const [scenarios, setScenarios] = useState<Scenario[]>([]);
@@ -13,6 +32,7 @@ export const ScenarioAudit = () => {
     const [totalPages, setTotalPages] = useState(0);
     const [loading, setLoading] = useState(false);
     const [processing, setProcessing] = useState<string | null>(null);
+    const [statusFilter, setStatusFilter] = useState<number | undefined>(undefined);
 
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [rejectOpen, setRejectOpen] = useState(false);
@@ -33,7 +53,7 @@ export const ScenarioAudit = () => {
     const loadScenarios = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await adminApi.getPendingScenarios(page, 10);
+            const res = await adminApi.getAllScenarios(page, 10, statusFilter);
             if (res.data.code === 200) {
                 const data = res.data.data as Page<Scenario> | unknown;
                 const content = Array.isArray((data as { content?: unknown }).content)
@@ -45,11 +65,11 @@ export const ScenarioAudit = () => {
             }
         } catch (error) {
             console.error(error);
-            toast.error("加载待审核场景失败");
+            toast.error("加载场景失败");
         } finally {
             setLoading(false);
         }
-    }, [page]);
+    }, [page, statusFilter]);
 
     useEffect(() => {
         loadScenarios();
@@ -86,7 +106,7 @@ export const ScenarioAudit = () => {
         try {
             await adminApi.auditScenario(scenarioId, approved, rejectReason);
             toast.success(approved ? "已通过" : "已拒绝");
-            setScenarios((prev) => prev.filter(s => s.id !== scenarioId));
+            loadScenarios();
         } catch (error) {
             console.error(error);
             toast.error("操作失败");
@@ -102,14 +122,34 @@ export const ScenarioAudit = () => {
                 <div className="space-y-1">
                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center gap-2">
                         <FileText className="w-6 h-6 md:w-7 md:h-7 text-primary" />
-                        场景审核
+                        情景管理
                     </h1>
-                    <p className="text-muted-foreground text-sm">审核用户提交的情景内容</p>
+                    <p className="text-muted-foreground text-sm">管理所有情景内容，区分来源</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => loadScenarios()} className="gap-2 shrink-0">
-                    <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    刷新
-                </Button>
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border bg-card">
+                        <Filter className="w-4 h-4 text-muted-foreground" />
+                        <select
+                            value={statusFilter ?? ''}
+                            onChange={(e) => {
+                                const val = e.target.value;
+                                setStatusFilter(val === '' ? undefined : Number(val));
+                                setPage(0);
+                            }}
+                            className="bg-transparent text-sm outline-none cursor-pointer"
+                        >
+                            <option value="">全部状态</option>
+                            <option value="0">待审核</option>
+                            <option value="1">已拒绝</option>
+                            <option value="3">AI通过</option>
+                            <option value="4">已通过</option>
+                        </select>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => loadScenarios()} className="gap-2 shrink-0">
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                        刷新
+                    </Button>
+                </div>
             </div>
 
             {loading ? (
@@ -120,67 +160,88 @@ export const ScenarioAudit = () => {
                 <Card className="border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
                         <AlertCircle className="h-12 w-12 mb-4 opacity-30" />
-                        <p className="text-sm">暂无待审核场景</p>
-                        <p className="text-xs mt-1">所有场景都已处理完毕</p>
+                        <p className="text-sm">暂无情景数据</p>
                     </CardContent>
                 </Card>
             ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                    {scenarios.map((scenario) => (
-                        <Card key={scenario.id} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
-                            <CardContent className="p-0">
-                                <div className="p-4 md:p-5 space-y-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <h3 className="text-lg font-semibold leading-tight line-clamp-2">{scenario.title}</h3>
-                                        <span className="text-[10px] text-muted-foreground font-mono bg-muted px-2 py-1 rounded shrink-0">
-                                            #{scenario.id.substring(0, 6)}
-                                        </span>
-                                    </div>
-
-                                    <div className="bg-muted/50 rounded-lg p-3 md:p-4">
-                                        <p className="text-sm leading-relaxed whitespace-pre-wrap line-clamp-4 md:line-clamp-6 text-muted-foreground">
-                                            {scenario.description}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                        <div className="flex items-center gap-1.5">
-                                            <User className="w-3.5 h-3.5" />
-                                            <span className="font-mono">{scenario.submitterId.substring(0, 8)}...</span>
+                    {scenarios.map((scenario) => {
+                        const sourceInfo = getSourceInfo(scenario.submitterId);
+                        const statusInfo = STATUS_MAP[scenario.status] || { label: '未知', color: 'bg-gray-100 text-gray-600' };
+                        const SourceIcon = sourceInfo.icon;
+                        
+                        return (
+                            <Card key={scenario.id} className="overflow-hidden group hover:shadow-lg transition-all duration-300">
+                                <CardContent className="p-0">
+                                    <div className="p-4 md:p-5 space-y-4">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <h3 className="text-lg font-semibold leading-tight line-clamp-2">{scenario.title}</h3>
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusInfo.color}`}>
+                                                    {statusInfo.label}
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground font-mono">
+                                                    #{scenario.id.substring(0, 6)}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div className="flex gap-3 pt-2 border-t border-border">
-                                        <Button
-                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                            disabled={processing === scenario.id}
-                                            onClick={() => onApproveClick(scenario.id)}
-                                        >
-                                            {processing === scenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                                <>
-                                                    <Check className="w-4 h-4 mr-1.5" />
-                                                    通过
-                                                </>
-                                            )}
-                                        </Button>
-                                        <Button
-                                            variant="danger"
-                                            className="flex-1"
-                                            disabled={processing === scenario.id}
-                                            onClick={() => onRejectClick(scenario.id)}
-                                        >
-                                            {processing === scenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
-                                                <>
-                                                    <X className="w-4 h-4 mr-1.5" />
-                                                    拒绝
-                                                </>
-                                            )}
-                                        </Button>
+                                        <div className="bg-muted/50 rounded-lg p-3 md:p-4">
+                                            <p className="text-sm leading-relaxed whitespace-pre-wrap line-clamp-4 md:line-clamp-6 text-muted-foreground">
+                                                {scenario.description}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                            <div className="flex items-center gap-1.5">
+                                                <SourceIcon className={`w-3.5 h-3.5 ${sourceInfo.color}`} />
+                                                <span>{sourceInfo.label}</span>
+                                                {scenario.submitterId && !scenario.submitterId.startsWith('admin_') && scenario.submitterId !== 'SYSTEM' && (
+                                                    <span className="font-mono text-[10px]">({scenario.submitterId.substring(0, 8)}...)</span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {scenario.status === 0 && (
+                                            <div className="flex gap-3 pt-2 border-t border-border">
+                                                <Button
+                                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                                    disabled={processing === scenario.id}
+                                                    onClick={() => onApproveClick(scenario.id)}
+                                                >
+                                                    {processing === scenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                                        <>
+                                                            <Check className="w-4 h-4 mr-1.5" />
+                                                            通过
+                                                        </>
+                                                    )}
+                                                </Button>
+                                                <Button
+                                                    variant="danger"
+                                                    className="flex-1"
+                                                    disabled={processing === scenario.id}
+                                                    onClick={() => onRejectClick(scenario.id)}
+                                                >
+                                                    {processing === scenario.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                                                        <>
+                                                            <X className="w-4 h-4 mr-1.5" />
+                                                            拒绝
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </div>
+                                        )}
+
+                                        {scenario.rejectReason && (
+                                            <div className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                                                拒绝理由: {scenario.rejectReason}
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
             )}
 

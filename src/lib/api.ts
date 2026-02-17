@@ -222,6 +222,11 @@ export const adminApi = {
   getUsers: (page = 0, size = 10, search = "") => api.get<ApiResponse<Page<User>>>(`/admin/users?page=${page}&size=${size}&search=${search}`),
   updateUserPermission: (userId: string, level: number) => api.post(`/admin/users/${userId}/permission`, { level }),
   getPendingScenarios: (page = 0, size = 10) => api.get<ApiResponse<Page<Scenario>>>(`/admin/scenarios/pending?page=${page}&size=${size}`),
+  getAllScenarios: (page = 0, size = 10, status?: number) => {
+    const params = new URLSearchParams({ page: String(page), size: String(size) });
+    if (status !== undefined) params.append('status', String(status));
+    return api.get<ApiResponse<Page<Scenario>>>(`/admin/scenarios?${params.toString()}`);
+  },
   auditScenario: (scenarioId: string, approved: boolean, rejectReason?: string) =>
     api.post(`/admin/scenarios/${scenarioId}/audit`, { approved, rejectReason }),
 };
