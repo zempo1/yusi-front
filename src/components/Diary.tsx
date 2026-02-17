@@ -3,7 +3,7 @@ import { toast } from 'sonner'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { writeDiary, editDiary, getDiaryList, generateAiResponse, submitToPlaza, type Diary as DiaryType } from '../lib'
 import { useNavigate, Link } from 'react-router-dom'
-import { Sparkles, Lock, MessageCircle, Edit2, X, Settings, Unlock, Book, MapPin, Share2, Clock, Users } from 'lucide-react'
+import { Sparkles, Lock, MessageCircle, Edit2, X, Book, MapPin, Share2, Clock, Users } from 'lucide-react'
 import { useChatStore } from '../stores'
 import { useEncryptionStore } from '../stores/encryptionStore'
 import { useAuthStore } from '../store/authStore'
@@ -411,34 +411,6 @@ function DiaryContent({ userId }: { userId: string }) {
             <Users className="w-4 h-4 mr-2" />
             关系图谱
           </Button>
-
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full text-sm bg-card/50 backdrop-blur border border-border/50 shadow-sm">
-          {keyMode === 'CUSTOM' ? (
-            cryptoKey ? (
-              <>
-                <Unlock className="w-4 h-4 text-green-500" />
-                <span className="text-green-600 dark:text-green-400 font-medium">自定义密钥 · 已解锁</span>
-              </>
-            ) : (
-              <>
-                <Lock className="w-4 h-4 text-amber-500" />
-                <span className="text-amber-600 dark:text-amber-400 font-medium">自定义密钥 · 已锁定</span>
-                <Button variant="ghost" size="sm" className="h-6 px-2 ml-1" onClick={() => navigate('/settings')}>
-                  解锁
-                </Button>
-              </>
-            )
-          ) : (
-            <>
-              <Lock className="w-4 h-4 text-primary" />
-              <span className="text-primary font-medium">默认密钥 · 自动保护</span>
-            </>
-          )}
-          <div className="w-px h-4 bg-border mx-1" />
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => navigate('/settings')} title="密钥设置">
-            <Settings className="w-4 h-4" />
-          </Button>
-        </div>
         </div>
       </div>
 
