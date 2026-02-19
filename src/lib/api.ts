@@ -120,9 +120,11 @@ api.interceptors.response.use(
             setToken(accessToken, newRefreshToken);
             originalRequest.headers["Authorization"] = "Bearer " + accessToken;
             processQueue(null, accessToken);
+            console.log("Token refreshed:", accessToken);
             return api(originalRequest);
           } else {
-            throw new Error(data.msg || "Refresh failed");
+            console.log("Refresh failed:", data);
+            throw new Error(data.info || "Refresh failed");
           }
         } catch (refreshErr) {
           processQueue(refreshErr, null);
