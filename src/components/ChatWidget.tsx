@@ -4,7 +4,7 @@ import { Button } from './ui/Button'
 import { Textarea } from './ui/Textarea'
 import { cn, API_BASE } from '../utils'
 import { useAuthStore } from '../store/authStore'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useDragControls } from 'framer-motion'
 import { toast } from 'sonner'
 import { getDiaryList, type Diary as DiaryType } from '../lib'
 
@@ -35,6 +35,7 @@ export const ChatWidget = () => {
   const abortControllerRef = useRef<AbortController | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   
   // @日记选择相关状态
   const [showDiaryPicker, setShowDiaryPicker] = useState(false)
@@ -42,6 +43,9 @@ export const ChatWidget = () => {
   const [diaryReferences, setDiaryReferences] = useState<DiaryReference[]>([])
   const [loadingDiaries, setLoadingDiaries] = useState(false)
   const [atPosition, setAtPosition] = useState<number | null>(null)
+
+  // 拖动控制器
+  const dragControls = useDragControls()
 
   // 加载日记列表
   const loadDiaries = useCallback(async () => {
@@ -159,10 +163,10 @@ export const ChatWidget = () => {
       setDiaryReferences(prev => [...prev, diaryRef])
     }
 
-    // 替换@及其后面的文字为日记标题
+    // 清除@及其后面的搜索文字
     const beforeAt = input.slice(0, atPosition)
-    const afterCursor = input.slice(textareaRef.current?.selectionStart || atPosition + 1)
-    setInput(`${beforeAt}@${diary.title} ${afterCursor}`)
+    const afterMatch = input.slice(textareaRef.current?.selectionStart || atPosition + 1)
+    setInput(`${beforeAt}${afterMatch}`)
     
     setShowDiaryPicker(false)
     setAtPosition(null)
@@ -337,17 +341,28 @@ export const ChatWidget = () => {
   if (!user) return null
 
   return (
-    <>
+    <div 
+      ref={containerRef}
+      className="fixed bottom-24 right-4 z-[60] touch-none"
+    >
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-32 right-4 z-50 w-[420px] h-[560px] shadow-2xl rounded-2xl overflow-hidden flex flex-col bg-background/95 backdrop-blur border border-border/50"
+            drag
+            dragControls={dragControls}
+            dragListener={false}
+            dragMomentum={false}
+            dragElastic={0}
+            className="w-[420px] h-[560px] shadow-2xl rounded-2xl overflow-hidden flex flex-col bg-background/95 backdrop-blur border border-border/50"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/30">
+            {/* Header - 可拖动区域 */}
+            <div 
+              className="flex items-center justify-between p-4 border-b border-border/40 bg-muted/30 cursor-grab active:cursor-grabbing"
+              onPointerDown={(e) => dragControls.start(e)}
+            >
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                 <span className="font-semibold text-sm">小予AI</span>
@@ -513,13 +528,21 @@ export const ChatWidget = () => {
         )}
       </AnimatePresence>
 
+      {/* 气泡按钮 - 与聊天框在同一容器内，共享拖动 */}
       <motion.button
         drag
+        dragControls={dragControls}
+        dragListener={false}
         dragMomentum={false}
+        dragElastic={0}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-24 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors touch-none"
+        className={cn(
+          "h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors",
+          isOpen ? "mt-4" : ""
+        )}
+        onPointerDown={(e) => !isOpen && dragControls.start(e)}
       >
         {isOpen ? (
           <X className="h-6 w-6" />
@@ -527,6 +550,6 @@ export const ChatWidget = () => {
           <MessageCircle className="h-6 w-6" />
         )}
       </motion.button>
-    </>
+    </div>
   )
 }
