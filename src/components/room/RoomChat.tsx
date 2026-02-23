@@ -151,11 +151,10 @@ export const RoomChat = ({ roomCode, roomStatus, memberNames = {} }: RoomChatPro
 
         setSending(true)
         try {
-            const newMessage = await sendRoomMessage(roomCode, input.trim())
-            setMessages(prev => [...prev, newMessage])
-            lastMessageTimeRef.current = newMessage.createdAt
+            await sendRoomMessage(roomCode, input.trim())
+            // 不在本地添加消息，依赖 WebSocket 广播来更新
+            // 这样可以避免重复，且所有客户端行为一致
             setInput('')
-            scrollToBottom()
         } catch {
             toast.error('发送失败')
         } finally {
