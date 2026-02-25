@@ -7,7 +7,8 @@ import { authApi, type User as UserProfile } from '../lib/api';
 import { LocationManager } from '../components/LocationManager';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { ArrowLeft, Lock, MapPin, User as UserIcon, Key, Shield, AlertTriangle, Check, X, Pencil, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Lock, MapPin, User as UserIcon, Key, Shield, AlertTriangle, Check, X, Pencil, Save, Loader2, Code, Copy, RefreshCw } from 'lucide-react';
+import { developerApi } from '../lib/api';
 
 export default function Settings() {
     const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function Settings() {
     } = useEncryptionStore();
 
     // Tabs
-    const [activeTab, setActiveTab] = useState<'security' | 'locations' | 'account'>('security');
+    const [activeTab, setActiveTab] = useState<'security' | 'locations' | 'account' | 'developer'>('security');
 
     // Modals
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -187,6 +188,7 @@ export default function Settings() {
                         { id: 'security', label: '安全与隐私', icon: Lock },
                         { id: 'locations', label: '地点管理', icon: MapPin },
                         { id: 'account', label: '账户', icon: UserIcon },
+                        { id: 'developer', label: '开发者', icon: Code },
                     ] as const).map((tab) => (
                         <button
                             key={tab.id}
@@ -323,6 +325,12 @@ export default function Settings() {
                     {activeTab === 'account' && (
                         <div className="bg-card border border-border rounded-2xl p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <ProfileSection user={user} />
+                        </div>
+                    )}
+
+                    {activeTab === 'developer' && (
+                        <div className="bg-card border border-border rounded-2xl p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <DeveloperSection />
                         </div>
                     )}
                 </div>
@@ -571,6 +579,104 @@ function ProfileSection({ user }: ProfileSectionProps) {
                 <div className="flex justify-between py-3 border-b border-border/50 items-center">
                     <span className="text-muted-foreground w-20">用户ID</span>
                     <span className="font-mono text-sm bg-secondary px-2 py-1 rounded">{user?.userId}</span>
+                </div>
+            </div>
+        </>
+    );
+}
+
+function DeveloperSection() {
+    const [apiKey, setApiKey] = useState<string>('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const data = await developerApi.getConfig();
+                if (data?.data?.apiKey) {
+                    setApiKey(data.data.apiKey);
+                }
+            } catch (error) {
+                console.error("Failed to load developer config:", error);
+            }
+        };
+        fetchConfig();
+    }, []);
+
+    const handleRotate = async () => {
+        setIsLoading(true);
+        try {
+            const data = await developerApi.rotateApiKey();
+            if (data?.data?.apiKey) {
+                setApiKey(data.data.apiKey);
+                toast.success('已生成新的 API Key');
+            }
+        } catch (error) {
+            toast.error('生成失败，请重试');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleCopy = () => {
+        if (!apiKey) return;
+        navigator.clipboard.writeText(apiKey);
+        toast.success('API Key 已复制到剪贴板');
+    };
+
+    return (
+        <>
+            <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 rounded-lg bg-primary/10 text-primary">
+                    <Code className="w-5 h-5" />
+                </div>
+                <div>
+                    <h2 className="text-lg font-semibold">开发者设置</h2>
+                    <p className="text-sm text-muted-foreground">管理供外部应用（如 MCP 客户端）调用的凭证</p>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <div className="p-5 rounded-xl border border-primary/20 bg-primary/5">
+                    <div className="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 className="font-medium flex items-center gap-2">
+                                <Key className="w-4 h-4 text-primary" />
+                                个人 API Key
+                            </h3>
+                            <p className="text-sm text-muted-foreground mt-1">用于认证客户端对您个人数据的访问（请妥善保管）。</p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Input
+                            readOnly
+                            type="password"
+                            value={apiKey || '••••••••••••••••••••••••'}
+                            className="font-mono bg-card"
+                            placeholder="尚未生成 API Key"
+                        />
+                        <div className="flex gap-2 shrink-0">
+                            <Button variant="outline" onClick={handleCopy} disabled={!apiKey}>
+                                <Copy className="w-4 h-4 mr-2" />
+                                复制
+                            </Button>
+                            <Button onClick={handleRotate} disabled={isLoading}>
+                                {isLoading ? (
+                                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                ) : (
+                                    <RefreshCw className="w-4 h-4 mr-2" />
+                                )}
+                                {apiKey ? '重新生成' : '生成 Key'}
+                            </Button>
+                        </div>
+                    </div>
+                    {apiKey && (
+                        <p className="text-xs text-amber-500 mt-3 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            重要提示：该凭证可访问您的个人日记及生活图谱。如遇泄露请立即重新生成。
+                        </p>
+                    )}
                 </div>
             </div>
         </>

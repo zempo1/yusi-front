@@ -262,3 +262,12 @@ export const promptApi = {
   activate: (id: number) => api.post<ApiResponse<void>>(`/prompt/${id}/activate`),
   delete: (id: number) => api.delete<ApiResponse<void>>(`/prompt/${id}`),
 };
+
+export interface DeveloperConfigVO {
+  apiKey: string;
+}
+
+export const developerApi = {
+  getConfig: () => api.get<ApiResponse<DeveloperConfigVO>>("/developer/config").then((res) => res.data),
+  rotateApiKey: () => api.post<ApiResponse<DeveloperConfigVO>>("/developer/config/api-key").then((res) => res.data),
+};
