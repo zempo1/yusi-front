@@ -47,6 +47,7 @@ export const ChatWidget = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
   const dragStartPos = useRef({ x: 0, y: 0 })
+  const isDraggingRef = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   // 离线草稿加载
@@ -364,17 +365,42 @@ export const ChatWidget = () => {
     const isDragHandle = target.closest('[data-drag-handle]')
     if (!isDragHandle) return
 
-    e.preventDefault()
-    setIsDragging(true)
+    // 注意：这里不要调用 preventDefault，否则会阻止 PC 端的 click 事件
+    isDraggingRef.current = false
+    setIsDragging(false)
+
     dragStartPos.current = {
       x: e.clientX - position.x,
       y: e.clientY - position.y
     }
-      ; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    // 移除 setPointerCapture，改为在 move 时捕获
   }
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging || !containerRef.current) return
+    if (!containerRef.current) return
+
+    // 如果还没有开始拖拽，检查移动距离是否超过阈值
+    if (!isDraggingRef.current) {
+      // 检查鼠标是否按下（buttons === 1 表示左键按下）
+      // 注意：PointerEvent 在移动端可能 buttons 为 0，所以这里主要针对 PC
+      if (e.buttons === 0 && e.pointerType === 'mouse') return
+
+      const currentX = e.clientX - dragStartPos.current.x
+      const currentY = e.clientY - dragStartPos.current.y
+
+      // 注意：position 是状态中的偏移量，不是绝对位置
+      const moveX = Math.abs(currentX - position.x)
+      const moveY = Math.abs(currentY - position.y)
+
+      if (moveX > 5 || moveY > 5) {
+        isDraggingRef.current = true
+        setIsDragging(true)
+          // 确认拖拽后再捕获指针
+          ; (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+      } else {
+        return
+      }
+    }
 
     e.preventDefault()
     let newX = e.clientX - dragStartPos.current.x
@@ -406,15 +432,22 @@ export const ChatWidget = () => {
   }
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    setIsDragging(false)
-      ; (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false
+      setIsDragging(false)
+        ; (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+    }
   }
 
   // 点击气泡切换状态
-  const handleBubbleClick = () => {
-    if (!isDragging) {
-      setIsOpen(!isOpen)
+  const handleBubbleClick = (e: React.MouseEvent) => {
+    // 如果刚刚发生了拖拽，则阻止点击事件
+    if (isDraggingRef.current) {
+      e.preventDefault()
+      e.stopPropagation()
+      return
     }
+    setIsOpen(!isOpen)
   }
 
   if (!user) return null
@@ -437,7 +470,7 @@ export const ChatWidget = () => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="w-[420px] h-[560px] shadow-2xl rounded-2xl overflow-hidden flex flex-col bg-background/95 backdrop-blur border border-border/50 mb-4"
+            className="w-[calc(100vw-32px)] sm:w-[420px] h-[60vh] sm:h-[560px] shadow-2xl rounded-2xl overflow-hidden flex flex-col bg-background/95 backdrop-blur border border-border/50 mb-4"
           >
             {/* Header - 拖动手柄 */}
             <div
